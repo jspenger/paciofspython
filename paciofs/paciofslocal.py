@@ -1,32 +1,59 @@
 import logging.config
+import threading
 import tempfile
 import logging
 import shutil
 import fuse
+import sys
 import os
 import blockchainbroadcast
 import blockchainfs
 import blockchain
 import module
 
-logging.config.fileConfig(os.path.join(os.path.dirname(__file__),'logging.conf'))
-logger = logging.getLogger('paciofslocal')
+logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
+logger = logging.getLogger("paciofslocal")
+
 
 class PacioFSLocal(module.Module):
     def __init__(self, mountpoint=None):
         self.mountpoint = mountpoint
         if self.mountpoint == None:
             self.mountpoint = tempfile.mkdtemp()
-            self._handle_exit(lambda: shutil.rmtree(self.mountpoint, ignore_errors=True))
+            self._handle_exit(
+                lambda: shutil.rmtree(self.mountpoint, ignore_errors=True)
+            )
 
-    def _start(self):
-        logger.info("starting PacioFSLocal: mountpoint=%s; volume=%s" % (self.mountpoint, self.southbound.volume))
-        fuse.FUSE(self.southbound, self.mountpoint, nothreads=True, foreground=True)
+    def _start(self, daemon=False):
+        logger.info(
+            "starting PacioFSLocal: mountpoint=%s; volume=%s"
+            % (self.mountpoint, self.southbound.volume)
+        )
+        if daemon == True:
+            self._handle_exit(fuse.fuse_exit)
+            self._handle_exit(sys.exit)
+            threading.Thread(
+                target=fuse.FUSE,
+                args=(self.southbound, self.mountpoint),
+                kwargs=dict(nothreads=True, foreground=True),
+                daemon=True,
+            ).start()
+        else:
+            fuse.FUSE(self.southbound, self.mountpoint, nothreads=True, foreground=True)
+
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(parents=[PacioFSLocal._Parser(), blockchainfs.BlockchainFS._Parser(), blockchainbroadcast.BlockchainBroadcast._Parser(), blockchain.Blockchain._Parser()])
-    parser.add_argument('--logginglevel', default='INFO')
+
+    parser = argparse.ArgumentParser(
+        parents=[
+            PacioFSLocal._Parser(),
+            blockchainfs.BlockchainFS._Parser(),
+            blockchainbroadcast.BlockchainBroadcast._Parser(),
+            blockchain.Blockchain._Parser(),
+        ]
+    )
+    parser.add_argument("--logginglevel", default="INFO")
     args = parser.parse_args()
     logging.getLogger().setLevel(args.logginglevel)
 

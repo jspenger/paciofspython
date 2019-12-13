@@ -67,13 +67,24 @@ class Passthrough(Operations):
     def getattr(self, path, fh=None):
         full_path = self._full_path(path)
         st = os.lstat(full_path)
-        return dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
-                     'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+        return dict(
+            (key, getattr(st, key))
+            for key in (
+                "st_atime",
+                "st_ctime",
+                "st_gid",
+                "st_mode",
+                "st_mtime",
+                "st_nlink",
+                "st_size",
+                "st_uid",
+            )
+        )
 
     def readdir(self, path, fh):
         full_path = self._full_path(path)
 
-        dirents = ['.', '..']
+        dirents = [".", ".."]
         if os.path.isdir(full_path):
             dirents.extend(os.listdir(full_path))
         for r in dirents:
@@ -100,9 +111,21 @@ class Passthrough(Operations):
     def statfs(self, path):
         full_path = self._full_path(path)
         stv = os.statvfs(full_path)
-        return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
-            'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
-            'f_frsize', 'f_namemax'))
+        return dict(
+            (key, getattr(stv, key))
+            for key in (
+                "f_bavail",
+                "f_bfree",
+                "f_blocks",
+                "f_bsize",
+                "f_favail",
+                "f_ffree",
+                "f_files",
+                "f_flag",
+                "f_frsize",
+                "f_namemax",
+            )
+        )
 
     def unlink(self, path):
         return os.unlink(self._full_path(path))
@@ -140,7 +163,7 @@ class Passthrough(Operations):
 
     def truncate(self, path, length, fh=None):
         full_path = self._full_path(path)
-        with open(full_path, 'r+') as f:
+        with open(full_path, "r+") as f:
             f.truncate(length)
 
     def flush(self, path, fh):
@@ -156,5 +179,6 @@ class Passthrough(Operations):
 def main(mountpoint, root):
     FUSE(Passthrough(root), mountpoint, nothreads=True, foreground=True)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main(sys.argv[2], sys.argv[1])

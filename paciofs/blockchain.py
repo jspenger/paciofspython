@@ -1,100 +1,135 @@
 import logging.config
 import multichaincli
-import tempfile
-import subprocess
-import threading
 import retrying
 import port_for
 import tempfile
 import logging
-import signal
 import shutil
-import psutil
-import json
 import time
+import sys
 import os
 import module
 
-logging.config.fileConfig(os.path.join(os.path.dirname(__file__),'logging.conf'))
-logger = logging.getLogger('blockchain')
+logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
+logger = logging.getLogger("blockchain")
+
 
 class Blockchain(multichaincli.Multichain, module.Module):
-    def __init__(self, rpcuser='user', rpcpasswd='password', rpcport=None, rpchost='localhost', chainname=None, datadir=None):
+    """Create, start, and communicate (RPC) with multichain blockchain server.
+
+    Blockchain RPC abstraction of the multichain blockchain.
+    _create a new blockchain instance, _start an multichain server, _stop any
+    started clients.
+    If omitting any parameters, _create will create a new multichain instance,
+    and _start will start a new multichain server of that instance.
+    If passing chainname of the form "chainname@host:post", then _start will
+    start a new multichain server, connecting to (remote) multichain blockchain
+    instance with name "chainname" at "host:port".
+    If passing the rpcuser, rpcpasswd, chainname, rpchost, rpcport of a running
+    multichain server, then will connect to server at passed arguments.
+    """
+
+    def __init__(
+        self,
+        rpcuser="user",
+        rpcpasswd="password",
+        rpcport=None,
+        rpchost="localhost",
+        chainname=None,
+        datadir=None,
+    ):
         self.rpcuser = rpcuser
         self.rpcpasswd = rpcpasswd
         self.rpcport = rpcport
         self.rpchost = rpchost
         self.chainname = chainname
         self.datadir = datadir
-        if self.rpcport == None:
+        if self.rpcport is None:
             self.rpcport = port_for.select_random()
-        if self.chainname == None:
-            import time
-            self.chainname = 'chain' + str(round(time.time()))
-        if self.datadir == None:
+        if self.chainname is None:
+            self.chainname = "chain" + str(round(time.time()))
+        if self.datadir is None:
             self.datadir = tempfile.mkdtemp()
             self._handle_exit(lambda: shutil.rmtree(self.datadir, ignore_errors=True))
-        super().__init__(self.rpcuser, self.rpcpasswd, self.rpchost, self.rpcport, self.chainname.split("@")[0])
+        super().__init__(
+            self.rpcuser,
+            self.rpcpasswd,
+            self.rpchost,
+            self.rpcport,
+            self.chainname.split("@")[0],
+        )
+        self._handle_exit(sys.exit)
 
     def _create(self):
         logger.info("creating blockchain: %s" % self.chainname)
-        self._execute_command("multichain-util create %s -datadir=%s -anyone-can-connect=true -anyone-can-send=true -anyone-can-receive=true" % (self.chainname, self.datadir))
+        self._execute_command(
+            "multichain-util create %s -datadir=%s -anyone-can-connect=true -anyone-can-send=true -anyone-can-receive=true -anyone-can-mine=true -target-block-time=5 -mining-turnover=1.0"
+            % (self.chainname, self.datadir)
+        )
 
     def _start(self):
-        logger.info("starting blockchain daemon: %s" % (self.chainname))
+        logger.info(
+            "starting blockchain daemon: %s at %s:%s"
+            % (self.chainname, self.rpchost, self.rpcport)
+        )
         self._execute_command(
             "multichaind %s -rpcuser=%s -rpcpassword=%s -rpcport=%s -rpchost=%s -datadir=%s -port=%s"
-            % (self.chainname, self.rpcuser, self.rpcpasswd, self.rpcport, self.rpchost, self.datadir, port_for.select_random())
-            , daemon=True)
+            % (
+                self.chainname,
+                self.rpcuser,
+                self.rpcpasswd,
+                self.rpcport,
+                self.rpchost,
+                self.datadir,
+                port_for.select_random(),
+            ),
+            daemon=True,
+        )
         logger.info("waiting for blockchain daemon")
         self._execute_command(
             "multichain-cli %s -rpcuser=%s -rpcpassword=%s -rpcport=%s -rpchost=%s -datadir=%s -rpcwait getinfo"
-            % (self.chainname, self.rpcuser, self.rpcpasswd, self.rpcport, self.rpchost, self.datadir))
+            % (
+                self.chainname,
+                self.rpcuser,
+                self.rpcpasswd,
+                self.rpcport,
+                self.rpchost,
+                self.datadir,
+            )
+        )
         logger.info("blockchain daemon started")
 
-    def _execute_command(self, command, daemon=False):
-        try:
-            logger.debug("executing command: %s" % command)
-            if daemon == True:
-                def f():
-                    process = subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    _, _ = process.communicate()
-                    if process.returncode != 0:
-                        raise
-                t = threading.Thread(target=f).start()
-            else:
-                result = subprocess.run(command, shell=True, capture_output=True, check=True)
-                return result.stdout
-        except Exception as e:
-            logger.error('error: %s' % e)
-            raise e
+    def _stop(self):
+        logger.info("stopping blockchain daemon: %s" % (self.chainname))
+        self._execute_command(
+            "multichain-cli %s -rpcuser=%s -rpcpassword=%s -rpcport=%s -rpchost=%s -datadir=%s stop"
+            % (
+                self.chainname,
+                self.rpcuser,
+                self.rpcpasswd,
+                self.rpcport,
+                self.rpchost,
+                self.datadir,
+            )
+        )
+        logger.info("blockchain daemon stopped")
 
-    @retrying.retry(wait_random_min=1000, wait_random_max=2000, stop_max_delay=10000)
+    @retrying.retry(wait_random_min=100, wait_random_max=2000, stop_max_delay=60000)
     def _create_utxo(self, pubkeyhash):
         txid = self.send(pubkeyhash, 0)
-        if 'error' in txid:
-            raise Exception('error: %s' % txid)
+        if "error" in txid:
+            raise Exception("error: %s" % txid)
+        while True:
+            txinfo = self.getrawtransaction(txid, 1)
+            if "error" in txinfo:
+                raise Exception("error: %s" % txinfo)
+            break
         transaction = self.getrawtransaction(txid)
         return txid, transaction
 
     def _create_funded_keypair(self):
         key = self.createkeypairs()
-        privkey = key[0]['privkey']
-        pubkeyhash = key[0]['address']
+        privkey = key[0]["privkey"]
+        pubkeyhash = key[0]["address"]
         prevtxhash, transaction = self._create_utxo(pubkeyhash)
         return privkey, pubkeyhash, prevtxhash, transaction
-
-if __name__ == '__main__':
-    b1 = Blockchain()
-    b1._create()
-    b1._start()
-    b2 = Blockchain(chainname=b1.getinfo()['nodeaddress'])
-    b2._start()
-    time.sleep(15)
-    print(b1.getinfo())
-    print(b2.getinfo())
-    print(b1.getbestblockhash())
-    print(b2.getbestblockhash())
-    b3 = Blockchain(rpcuser=b1.rpcuser, rpcpasswd=b1.rpcpasswd, chainname=b1.chainname, rpchost=b1.rpchost, rpcport=b1.rpcport)
-    print(b3.getinfo())
-    print(b3.getbestblockhash())
