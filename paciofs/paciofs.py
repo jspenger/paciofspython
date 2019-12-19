@@ -50,6 +50,7 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
                 except Exception as e:
                     logger.error("error: %s" % e)
             return f(*args, **kwargs)
+
         return _upon_fsapi
 
     def _upon_deliver(self, pid, txid, msg):
