@@ -73,7 +73,6 @@ class TamperProofBroadcast(module.Module):
         threading.Thread(target=self._timeout_append, daemon=True).start()
         threading.Thread(target=self._timeout_deliver, daemon=True).start()
         threading.Thread(target=self._timeout_broadcast, daemon=True).start()
-        self._handle_exit(sys.exit)
 
     def __init__(self, privkey=None, pubkeyhash=None, prevtxhash=None):
         self.southbound = None
