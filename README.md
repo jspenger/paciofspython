@@ -53,6 +53,12 @@ Run all integration tests:
 python -m unittest discover tests/integrationtests -v
 ```
 
+Run specific test:
+```
+python -m unittest tests.integrationtests.test_tamperproofbroadcast -v
+python -m unittest tests.integrationtests.test_tamperproofbroadcast.TestTamperProofBroadcast.test_validity -v
+```
+
 Run all benchmarks:
 ```
 sh tests/benchmarks/test_bonnie.sh
