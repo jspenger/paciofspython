@@ -42,15 +42,18 @@ class TestTamperProofBroadcast(unittest.TestCase):
             bc._start()
             self.broadcasts.append(bc)
 
+        time.sleep(5)
+
     def tearDown(self):
-        for bc in self.broadcasts:
-            bc._stop()
         for b in self.blockchains:
             b._stop()
-
-    def test_tamperproofbroadcast(self):
         for bc in self.broadcasts:
-            for i in range(10):
+            bc._stop()
+
+    def test_fifo_order(self):
+        n_messages = 2 ** 20
+        for i in range(n_messages):
+            for bc in self.broadcasts:
                 bc.broadcast(i)
 
         time.sleep(60)
@@ -58,5 +61,26 @@ class TestTamperProofBroadcast(unittest.TestCase):
         for nb in self.northbounds:
             for bc in self.broadcasts:
                 pid = bc.pubkeyhash
-                for i in range(10):
-                    nb._upon_deliver.assert_any_call(pid, unittest.mock.ANY, i)
+                calls = [
+                    c[0][2] for c in nb._upon_deliver.call_args_list if c[0][0] == pid
+                ]
+                issorted = all(calls[i] <= calls[i + 1] for i in range(len(calls) - 1))
+                self.assertTrue(issorted)
+                self.assertTrue(len(calls) > 0)
+
+    def test_total_order(self):
+        n_messages = 2 ** 20
+        for i in range(n_messages):
+            for bc in self.broadcasts:
+                bc.broadcast(i)
+
+        time.sleep(60)
+
+        for nb1 in self.northbounds:
+            for nb2 in self.northbounds:
+                self.assertEqual(
+                    nb1._upon_deliver.call_args_list, nb2._upon_deliver.call_args_list
+                )
+
+        for nb in self.northbounds:
+            self.assertTrue(len(nb._upon_deliver.call_args_list) > 0)
