@@ -74,6 +74,9 @@ class TamperProofBroadcast(module.Module):
         threading.Thread(target=self._timeout_deliver, daemon=True).start()
         threading.Thread(target=self._timeout_broadcast, daemon=True).start()
 
+    def _stop(self):
+        self.stop_event.set()
+
     def __init__(self, privkey=None, pubkeyhash=None, prevtxhash=None):
         self.southbound = None
         self.filesystem = None
@@ -85,13 +88,14 @@ class TamperProofBroadcast(module.Module):
         self.pubkeyhash = pubkeyhash
         self.prevtxhash = prevtxhash
         self.queue = queue.Queue()
+        self.stop_event = threading.Event()
 
     def broadcast(self, message):
         logger.info("upon_broadcast: %s", message)
         self.queue.put(message)
 
     def _timeout_broadcast(self):
-        while True:
+        while not self.stop_event.is_set():
             t = time.time()
             size = 0
             messages = []
@@ -115,7 +119,7 @@ class TamperProofBroadcast(module.Module):
             time.sleep(0.1)
 
     def _timeout_append(self):
-        while True:
+        while not self.stop_event.is_set():
             logger.debug("upon timeout (append)")
             self.lock.acquire()
             for txhash, signedtransaction in self.waiting.items():
@@ -125,8 +129,8 @@ class TamperProofBroadcast(module.Module):
             time.sleep(600.0)
 
     def _timeout_deliver(self):
-        try:
-            while True:
+        while not self.stop_event.is_set():
+            try:
                 logger.debug("upon timeout (deliver)")
                 logger.debug("trigger get")
                 bbh = self.southbound.getbestblockhash()
@@ -162,6 +166,6 @@ class TamperProofBroadcast(module.Module):
                         except Exception as e:
                             logger.error("error: %s", e)
                 time.sleep(5.0)
-        except Exception as e:
-            logger.error("error: %s", e)
-            raise
+            except Exception as e:
+                logger.error("error: %s", e)
+                raise
