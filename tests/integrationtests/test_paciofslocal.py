@@ -8,18 +8,17 @@ import logging
 import filecmp
 import time
 import os
-import blockchainbroadcast
-import blockchainfs
+import tamperproofbroadcast
+import paciofs
 import paciofslocal
-import broadcast
 import blockchain
 
-# logging.disable(logging.CRITICAL)
+logging.disable(logging.CRITICAL)
 
 
-class TestBlockchainFS(unittest.TestCase):
+class TestPacioFS(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 5
+        n_blockchains = 3
         self.blockchains = []
         self.broadcasts = []
         self.filesystems = []
@@ -39,42 +38,41 @@ class TestBlockchainFS(unittest.TestCase):
             self.blockchains.append(b2)
 
         for keypair, b in zip(keypairs, self.blockchains):
-            bc = blockchainbroadcast.BlockchainBroadcast(
+            bc = tamperproofbroadcast.TamperProofBroadcast(
                 keypair[0], keypair[1], keypair[2]
             )
-            filesystem = blockchainfs.BlockchainFS()
+            pfs = paciofs.PacioFS()
             bc._register_southbound(b)
-            bc._register_northbound(filesystem)
+            bc._register_northbound(pfs)
             bc._start()
             self.broadcasts.append(bc)
-            filesystem._register_southbound(bc)
-            filesystem._start()
-            self.filesystems.append(filesystem)
+            pfs._register_southbound(bc)
+            pfs._start()
+            self.filesystems.append(pfs)
 
-        for fs in self.filesystems:
+        for pfs in self.filesystems:
             pfsl = paciofslocal.PacioFSLocal()
-            pfsl._register_southbound(fs)
+            pfsl._register_southbound(pfs)
             mountpoint = pfsl.mountpoint
             pfsl._start(daemon=True)
             self.mountpoints.append(mountpoint)
             self.paciofslocals.append(pfsl)
-        time.sleep(10)
 
     def tearDown(self):
-        for fs in self.filesystems:
-            fs._stop()
+        for pfs in self.filesystems:
+            pfs._stop()
         for bc in self.broadcasts:
             bc._stop()
         for b in self.blockchains:
             b._stop()
 
-    def test_blockchainfs_large_write(self):
+    def test_paciofs_large_write(self):
         with open(os.path.join(self.mountpoints[0], "large_write"), "wb") as f:
-            for _ in range(100):
-                random_word = os.urandom(100)
+            for _ in range(100):  # 100 MB
+                random_word = os.urandom(2 ** 20)
                 f.write(random_word)
 
-        time.sleep(60)
+        time.sleep(300)
 
         for mountpoint in self.mountpoints:
             self.assertTrue(

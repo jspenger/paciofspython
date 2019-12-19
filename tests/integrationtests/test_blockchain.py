@@ -6,14 +6,12 @@ import unittest.mock
 import unittest
 import logging
 import time
-import blockchainbroadcast
-import broadcast
 import blockchain
 
 logging.disable(logging.CRITICAL)
 
 
-class TestBlockchainBroadcast(unittest.TestCase):
+class TestBlockchain(unittest.TestCase):
     def setUp(self):
         n_blockchains = 10
         self.blockchains = []

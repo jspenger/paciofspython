@@ -6,14 +6,13 @@ import unittest.mock
 import unittest
 import logging
 import time
-import blockchainbroadcast
-import broadcast
+import tamperproofbroadcast
 import blockchain
 
 logging.disable(logging.CRITICAL)
 
 
-class TestBlockchainBroadcast(unittest.TestCase):
+class TestTamperProofBroadcast(unittest.TestCase):
     def setUp(self):
         n_blockchains = 5
         self.blockchains = []
@@ -33,7 +32,7 @@ class TestBlockchainBroadcast(unittest.TestCase):
             self.blockchains.append(b2)
 
         for keypair, b in zip(keypairs, self.blockchains):
-            bc = blockchainbroadcast.BlockchainBroadcast(
+            bc = tamperproofbroadcast.TamperProofBroadcast(
                 keypair[0], keypair[1], keypair[2]
             )
             northbound = unittest.mock.MagicMock()
@@ -49,7 +48,7 @@ class TestBlockchainBroadcast(unittest.TestCase):
         for b in self.blockchains:
             b._stop()
 
-    def test_blockchainbroadcast(self):
+    def test_tamperproofbroadcast(self):
         for bc in self.broadcasts:
             for i in range(10):
                 bc.broadcast(i)

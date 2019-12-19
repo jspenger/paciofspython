@@ -4,9 +4,9 @@ import logging
 import rpyc
 import sys
 import os
-import blockchainbroadcast
-import blockchainfs
+import tamperproofbroadcast
 import blockchain
+import paciofs
 import module
 
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
@@ -39,8 +39,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         parents=[
             PacioFSServer._Parser(),
-            blockchainfs.BlockchainFS._Parser(),
-            blockchainbroadcast.BlockchainBroadcast._Parser(),
+            paciofs.PacioFS._Parser(),
+            tamperproofbroadcast.TamperProofBroadcast._Parser(),
             blockchain.Blockchain._Parser(),
         ]
     )
@@ -49,20 +49,20 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(args.logginglevel)
 
     b = blockchain.Blockchain._Init(args)
-    bb = blockchainbroadcast.BlockchainBroadcast._Init(args)
-    bfs = blockchainfs.BlockchainFS._Init(args)
+    bc = tamperproofbroadcast.TamperProofBroadcast._Init(args)
+    pfs = paciofs.PacioFS._Init(args)
     pfss = PacioFSServer._Init(args)
 
-    bb._register_southbound(b)
-    bb._register_northbound(bfs)
-    bfs._register_southbound(bb)
-    pfss._register_southbound(bfs)
+    bc._register_southbound(b)
+    bc._register_northbound(pfs)
+    pfs._register_southbound(bc)
+    pfss._register_southbound(pfs)
 
     b._create()
     b._start()
-    bb._create()
-    bb._start()
-    bfs._create()
-    bfs._start()
+    bc._create()
+    bc._start()
+    pfs._create()
+    pfs._start()
     pfss._create()
     pfss._start()

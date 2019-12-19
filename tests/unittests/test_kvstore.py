@@ -4,7 +4,7 @@ sys.path.append("paciofs")
 
 import unittest
 import logging
-from paciofs import kvstore
+import kvstore
 
 logging.disable(logging.CRITICAL)
 

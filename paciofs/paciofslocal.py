@@ -4,11 +4,12 @@ import tempfile
 import logging
 import shutil
 import fuse
+import time
 import sys
 import os
-import blockchainbroadcast
-import blockchainfs
+import tamperproofbroadcast
 import blockchain
+import paciofs
 import module
 
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
@@ -38,6 +39,7 @@ class PacioFSLocal(module.Module):
                 kwargs=dict(nothreads=True, foreground=True),
                 daemon=True,
             ).start()
+            time.sleep(5)
         else:
             fuse.FUSE(self.southbound, self.mountpoint, nothreads=True, foreground=True)
 
@@ -48,8 +50,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         parents=[
             PacioFSLocal._Parser(),
-            blockchainfs.BlockchainFS._Parser(),
-            blockchainbroadcast.BlockchainBroadcast._Parser(),
+            paciofs.PacioFS._Parser(),
+            tamperproofbroadcast.TamperProofBroadcast._Parser(),
             blockchain.Blockchain._Parser(),
         ]
     )
@@ -58,20 +60,20 @@ if __name__ == "__main__":
     logging.getLogger().setLevel(args.logginglevel)
 
     b = blockchain.Blockchain._Init(args)
-    bb = blockchainbroadcast.BlockchainBroadcast._Init(args)
-    bfs = blockchainfs.BlockchainFS._Init(args)
+    bc = tamperproofbroadcast.TamperProofBroadcast._Init(args)
+    pfs = paciofs.PacioFS._Init(args)
     pfsl = PacioFSLocal._Init(args)
 
-    bb._register_southbound(b)
-    bb._register_northbound(bfs)
-    bfs._register_southbound(bb)
-    pfsl._register_southbound(bfs)
+    bc._register_southbound(b)
+    bc._register_northbound(pfs)
+    pfs._register_southbound(bc)
+    pfsl._register_southbound(pfs)
 
     b._create()
     b._start()
-    bb._create()
-    bb._start()
-    bfs._create()
-    bfs._start()
+    bc._create()
+    bc._start()
+    pfs._create()
+    pfs._start()
     pfsl._create()
     pfsl._start()

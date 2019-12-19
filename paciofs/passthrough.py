@@ -1,4 +1,5 @@
-# https://github.com/skorokithakis/python-fuse-sample/blob/master/passthrough.py
+# Accessed: September, 2019
+# Src: https://github.com/skorokithakis/python-fuse-sample/blob/master/passthrough.py
 #
 # Copyright (c) 2016, Stavros Korokithakis
 # All rights reserved.

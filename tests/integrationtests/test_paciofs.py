@@ -7,15 +7,14 @@ import unittest
 import logging
 import time
 import os
-import blockchainbroadcast
-import blockchainfs
-import broadcast
+import tamperproofbroadcast
 import blockchain
+import paciofs
 
 logging.disable(logging.CRITICAL)
 
 
-class TestBlockchainFS(unittest.TestCase):
+class TestPacioFS(unittest.TestCase):
     def setUp(self):
         n_blockchains = 5
         self.blockchains = []
@@ -35,10 +34,10 @@ class TestBlockchainFS(unittest.TestCase):
             self.blockchains.append(b2)
 
         for keypair, b in zip(keypairs, self.blockchains):
-            bc = blockchainbroadcast.BlockchainBroadcast(
+            bc = tamperproofbroadcast.TamperProofBroadcast(
                 keypair[0], keypair[1], keypair[2]
             )
-            filesystem = blockchainfs.BlockchainFS()
+            filesystem = paciofs.PacioFS()
             bc._register_southbound(b)
             bc._register_northbound(filesystem)
             bc._start()
@@ -55,7 +54,7 @@ class TestBlockchainFS(unittest.TestCase):
         for b in self.blockchains:
             b._stop()
 
-    def test_blockchainfs(self):
+    def test_paciofs(self):
         for i, fs in enumerate(self.filesystems):
             dirname = str(i) + str(i)
             filename = str(i)

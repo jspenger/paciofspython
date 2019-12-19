@@ -2,18 +2,26 @@ import multiprocessing
 import logging.config
 import threading
 import retrying
+import binascii
 import logging
 import pickle
+import queue
 import time
 import sys
 import os
-import broadcast
+import module
 
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
-logger = logging.getLogger("blockchainbroadcast")
+logger = logging.getLogger("tamperproofbroadcast")
 
 
-class BlockchainBroadcast(broadcast.Broadcast):
+class TamperProofBroadcast(module.Module):
+    def _pack(self, message):
+        return binascii.hexlify(pickle.dumps(message)).decode()
+
+    def _unpack(self, payload):
+        return pickle.loads(binascii.unhexlify(payload))
+
     def _createTransaction(self, privkey, pubkeyhash, prevtxhash, message):
         logger.debug(
             "creating transaction: %s", (privkey, pubkeyhash, prevtxhash, message)
@@ -77,7 +85,7 @@ class BlockchainBroadcast(broadcast.Broadcast):
         self.privkey = privkey
         self.pubkeyhash = pubkeyhash
         self.prevtxhash = prevtxhash
-        super().__init__()
+        self.queue = queue.Queue()
 
     def broadcast(self, message):
         logger.info("upon_broadcast: %s", message)
@@ -154,7 +162,7 @@ class BlockchainBroadcast(broadcast.Broadcast):
                             self.lock.release()
                         except Exception as e:
                             logger.error("error: %s", e)
-                time.sleep(10.0)
+                time.sleep(5.0)
         except Exception as e:
             logger.error("error: %s", e)
             raise

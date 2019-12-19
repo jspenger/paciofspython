@@ -4,7 +4,7 @@ sys.path.append("paciofs")
 
 import unittest
 import logging
-from paciofs import blockchain
+import blockchain
 
 logging.disable(logging.CRITICAL)
 
