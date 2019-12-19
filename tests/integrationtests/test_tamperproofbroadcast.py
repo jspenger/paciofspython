@@ -14,7 +14,7 @@ logging.disable(logging.CRITICAL)
 
 class TestTamperProofBroadcast(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 5
+        n_blockchains = 2
         self.blockchains = []
         self.broadcasts = []
         self.northbounds = []
@@ -45,10 +45,10 @@ class TestTamperProofBroadcast(unittest.TestCase):
         time.sleep(5)
 
     def tearDown(self):
-        for b in self.blockchains:
-            b._stop()
         for bc in self.broadcasts:
             bc._stop()
+        for b in self.blockchains:
+            b._stop()
 
     def test_fifo_order(self):
         n_messages = 2 ** 20
