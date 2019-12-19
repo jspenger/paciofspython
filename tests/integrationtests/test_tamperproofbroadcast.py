@@ -14,7 +14,7 @@ logging.disable(logging.CRITICAL)
 
 class TestTamperProofBroadcast(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 2
+        n_blockchains = 5
         self.blockchains = []
         self.broadcasts = []
         self.northbounds = []
