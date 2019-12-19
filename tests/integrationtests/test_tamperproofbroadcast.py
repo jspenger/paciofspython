@@ -84,3 +84,17 @@ class TestTamperProofBroadcast(unittest.TestCase):
 
         for nb in self.northbounds:
             self.assertTrue(len(nb._upon_deliver.call_args_list) > 0)
+
+    def test_validity(self):
+        n_messages = 2**20
+        for i in range(n_messages):
+            for bc in self.broadcasts:
+                bc.broadcast(i)
+
+        time.sleep(60)
+
+        for nb in self.northbounds:
+            for bc in self.broadcasts:
+                pid = bc.pubkeyhash
+                for i in range(n_messages):
+                    nb._upon_deliver.assert_any_call(pid, unittest.mock.ANY, i)
