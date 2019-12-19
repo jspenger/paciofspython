@@ -78,15 +78,17 @@ class TestTamperProofBroadcast(unittest.TestCase):
 
         for nb1 in self.northbounds:
             for nb2 in self.northbounds:
-                self.assertEqual(
-                    nb1._upon_deliver.call_args_list, nb2._upon_deliver.call_args_list
-                )
+                nb1calls = [call for call in nb1._upon_deliver.call_args_list]
+                nb2calls = [call for call in nb2._upon_deliver.call_args_list]
+                nb1callsintersect = [call for call in nb1calls if call in nb2calls]
+                nb2callsintersect = [call for call in nb2calls if call in nb1calls]
+                self.assertEqual(nb1callsintersect, nb2callsintersect)
 
         for nb in self.northbounds:
             self.assertTrue(len(nb._upon_deliver.call_args_list) > 0)
 
     def test_validity(self):
-        n_messages = 2**20
+        n_messages = 2 ** 20
         for i in range(n_messages):
             for bc in self.broadcasts:
                 bc.broadcast(i)
@@ -98,3 +100,16 @@ class TestTamperProofBroadcast(unittest.TestCase):
                 pid = bc.pubkeyhash
                 for i in range(n_messages):
                     nb._upon_deliver.assert_any_call(pid, unittest.mock.ANY, i)
+
+    def test_agreement(self):
+        n_messages = 2 ** 20
+        for i in range(n_messages):
+            for bc in self.broadcasts:
+                bc.broadcast(i)
+
+        time.sleep(60)
+
+        for nb1 in self.northbounds:
+            for nb2 in self.northbounds:
+                for call in nb2._upon_deliver.call_args_list:
+                    nb1._upon_deliver.assert_any_call(*call[0])
