@@ -95,19 +95,20 @@ upon event < fs, FSAPI-* | arg1, arg2, ... > do
     log.append( obfuscated_msg, msg )
     trigger < bc, Broadcast | obfuscated_msg >
   returnvalue = disk.*( arg1, arg2, ... )
-  if verify( returnvalue, log ) do
-    trigger < fs, FSAPI-*-Return | returnvalue >
-  else
-    trigger < fs, FSAPI-*-Return | error >
+  trigger < fs, FSAPI-*-Return | returnvalue >
 
 upon event < bc, Deliver | pid, txid, obfuscated_msg > do
   if pid is my pid do  // if I broadcast message
     log.append( pid, txid, obfuscated_msg, msg )
 
+// auditing API-1: verify integrity of file system
+upon event < fs, AuAPI-1 > do
+  verify( disk, log )
+
 Footnotes:
 - obfuscate: pseudo-anonymize data (salt hash data)
-- verify: check if returnvalue is consistent with data
-  found in log, i.e. if it has not been tampered with
+- verify: check if disk is consistent with the tamper-proof
+  records found in log
 ```
 
 ## Development
