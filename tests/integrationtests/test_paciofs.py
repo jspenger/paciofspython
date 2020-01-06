@@ -16,7 +16,7 @@ logging.disable(logging.CRITICAL)
 
 class TestPacioFS(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 5
+        n_blockchains = 1
         self.blockchains = []
         self.broadcasts = []
         self.filesystems = []
@@ -53,6 +53,37 @@ class TestPacioFS(unittest.TestCase):
             bc._stop()
         for b in self.blockchains:
             b._stop()
+
+    def test_verify(self):
+        for i, fs in enumerate(self.filesystems):
+            dirname = str(i) + str(i)
+            filename = str(i)
+            payload = str(i).encode()
+            fs.create(filename, 0o777)
+            fh = fs.open(filename, os.O_WRONLY)
+            fs.write(filename, payload, 0, fh)
+            fs.release(filename, fh)
+            fs.mkdir(dirname, 755)
+
+        # wait for changes to propagate
+        time.sleep(60)
+
+        # assert that FS is verified
+        for i, fs in enumerate(self.filesystems):
+            self.assertTrue(fs._verify())
+
+        # unauthorized change of file system
+        for i, fs in enumerate(self.filesystems):
+            dirname = str(i) + str(i)
+            filename = str(i)
+            payload = "unauthorizedchange".encode()
+            fh = fs.filesystem.open(filename, os.O_WRONLY)
+            fs.filesystem.write(filename, payload, 0, fh)
+            fs.filesystem.release(filename, fh)
+
+        # assert that FS not verified
+        for i, fs in enumerate(self.filesystems):
+            self.assertFalse(fs._verify())
 
     def test_paciofs(self):
         for i, fs in enumerate(self.filesystems):

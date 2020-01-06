@@ -95,15 +95,15 @@ upon event < fs, Init > do
   log = [ ]
 
 upon event < fs, FSAPI-* | arg1, arg2, ... > do
+  returnvalue = disk.*( arg1, arg2, ... )
   if * changes state do
     msg = ( *, arg1, arg2, ... )
     obfuscated_msg = obfuscate( msg )
     log.append( obfuscated_msg, msg )
     trigger < bc, Broadcast | obfuscated_msg >
-  returnvalue = disk.*( arg1, arg2, ... )
   trigger < fs, FSAPI-*-Return | returnvalue >
 
-upon event < bc, Deliver | pid, txid, obfuscated_msg > do
+upon event < bc, Deliver | pid, epoch, txid, obfuscated_msg > do
   if pid is my pid do  // if I broadcast message
     log.append( pid, txid, obfuscated_msg, msg )
 
@@ -115,6 +115,7 @@ Footnotes:
 - obfuscate: pseudo-anonymize data (salt hash data)
 - verify: check if disk is consistent with the tamper-proof
   records found in log
+- pid: signature public key; epoch: block number; txid: transaction id
 ```
 
 ## Development
