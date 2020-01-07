@@ -112,26 +112,26 @@ upon event < fs, FSAPI-* | arg1, arg2, ... > do
   returnvalue = disk.*( arg1, arg2, ... )
   if * changes state do
     msg = ( *, arg1, arg2, ... )
-    obfuscatedmsg = obfuscate( msg )
-    map[ obfuscatedmsg ] = msg
-    trigger < bc, Broadcast | obfuscatedmsg >
+    obfuscated_msg = obfuscate( msg )
+    map[ obfuscated_msg ] = msg
+    trigger < bc, Broadcast | obfuscated_msg >
   trigger < fs, FSAPI-*-Return | returnvalue >
 
-upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid, host:port do
-  servers.add( pid -> host:port )
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid do
+  servers = servers \/ { pid }
 
 upon event < bc, Deliver | pid, epoch, txid, msg > do
   if pid is my pid do  // if I broadcast message
-    unobfuscatedmsg = map[ msg ]
-    log.append( pid, txid, msg, unobfuscatedmsg )
+    unobfuscated_msg = map[ msg ]
+    log.append( pid, txid, msg, unobfuscated_msg )
+
   else if pid is in servers do  // if message from known server
-    repeat until success  // success if get unobfuscatedmsg from remote server
+    repeat until success  // success if get unobfuscated_msg from remote server
       random_pid = random_choice( servers )  // randomly choose a server
-      unobfuscatedmsg = remote_get(pid, msg)  // get unobfuscated msg from remote server
+      unobfuscated_msg = remote_get(pid, msg)  // get unobfuscated msg from remote server
     log.append( pid, txid, msg, unobfuscatedmsg )
 
-// auditing API-1: verify integrity of file system
-upon event < fs, AuAPI-1 > do
+upon event < fs, AuAPI-1 > do  // auditing API-1: verify integrity of file system
   verify( disk, log )
 
 Footnotes:
