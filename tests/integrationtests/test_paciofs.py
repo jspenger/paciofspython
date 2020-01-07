@@ -16,7 +16,7 @@ logging.disable(logging.CRITICAL)
 
 class TestPacioFS(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 1
+        n_blockchains = 5
         self.blockchains = []
         self.broadcasts = []
         self.filesystems = []
@@ -32,6 +32,8 @@ class TestPacioFS(unittest.TestCase):
             b2 = blockchain.Blockchain(chainname=b.getinfo()["nodeaddress"])
             b2._start()
             self.blockchains.append(b2)
+
+        time.sleep(10)
 
         for keypair, b in zip(keypairs, self.blockchains):
             bc = tamperproofbroadcast.TamperProofBroadcast(

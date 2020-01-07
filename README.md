@@ -92,20 +92,31 @@ Uses:
 - Disk (local file system), instance disk
 
 upon event < fs, Init > do
-  log = [ ]
+  servers = { } // map: pid -> host:port
+  tmp_log = { }  // map: obfuscated_msg -> msg
+  log = [ ]  // list: pid, epoch, txid, obfuscated_msg, msg
 
 upon event < fs, FSAPI-* | arg1, arg2, ... > do
   returnvalue = disk.*( arg1, arg2, ... )
   if * changes state do
     msg = ( *, arg1, arg2, ... )
     obfuscated_msg = obfuscate( msg )
-    log.append( obfuscated_msg, msg )
+    tmp_log.append( obfuscated_msg, msg )
     trigger < bc, Broadcast | obfuscated_msg >
   trigger < fs, FSAPI-*-Return | returnvalue >
 
-upon event < bc, Deliver | pid, epoch, txid, obfuscated_msg > do
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid, host:port do
+  servers.add( pid -> host:port )
+
+upon event < bc, Deliver | pid, epoch, txid, msg > do
   if pid is my pid do  // if I broadcast message
-    log.append( pid, txid, obfuscated_msg, msg )
+    unobfuscated_msg = tmp_log[ msg ]
+    log.append( pid, txid, msg, unobfuscated_msg )
+    tmp_log.remove( msg )
+  if pid is in servers do
+    repeat do
+      pid, host:port = random_choice( servers )
+      pid.
 
 // auditing API-1: verify integrity of file system
 upon event < fs, AuAPI-1 > do
