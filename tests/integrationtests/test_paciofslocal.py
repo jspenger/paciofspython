@@ -37,6 +37,8 @@ class TestPacioFS(unittest.TestCase):
             b2._start()
             self.blockchains.append(b2)
 
+        time.sleep(10)
+
         for keypair, b in zip(keypairs, self.blockchains):
             bc = tamperproofbroadcast.TamperProofBroadcast(
                 keypair[0], keypair[1], keypair[2]
@@ -68,11 +70,11 @@ class TestPacioFS(unittest.TestCase):
 
     def test_paciofs_large_write(self):
         with open(os.path.join(self.mountpoints[0], "large_write"), "wb") as f:
-            for _ in range(100):  # 100 MB
+            for _ in range(10):  # 10 MB
                 random_word = os.urandom(2 ** 20)
                 f.write(random_word)
 
-        time.sleep(300)
+        time.sleep(180)
 
         for mountpoint in self.mountpoints:
             self.assertTrue(

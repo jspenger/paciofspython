@@ -34,12 +34,20 @@ class DictServer(module.Module):
     def put(self, key, value):
         self.dict[key] = value
 
-    @retrying.retry(wait_random_min=100, wait_random_max=2000, stop_max_delay=60000)
+    @retrying.retry(wait_random_min=10, wait_random_max=100, stop_max_delay=5000)
     def get_remote(self, key):
         serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         serversocket.connect(self.servers[random.choice(list(self.servers))])
         serversocket.sendall(pickle.dumps(key))
-        value = pickle.loads(serversocket.recv(4096))
+
+        value = bytearray()
+        buf = serversocket.recv(4096)
+        value.extend(buf)
+        while len(buf) >= 4096:
+            buf = serversocket.recv(4096)
+            value.extend(buf)
+
+        value = pickle.loads(value)
         serversocket.close()
         if value == None:
             raise Exception("could not find key: %s" % (key))
