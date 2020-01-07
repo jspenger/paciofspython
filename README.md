@@ -5,8 +5,9 @@ We aim to design a distributed file system for the digital archival of financial
 
 ## Current Status and Roadmap:
 - [x] tamper-proof: any participant can detect unauthorized changes to the file system
-- [ ] multi-user: multiple users can concurrently use the system
+- [x] multi-user: multiple users can concurrently use the system
 - [ ] multi-volume: supports multiple volumes
+- [ ] permissioned access / group membership: dynamic groups and permissions
 - [ ] complete version history: the entire file-history is accessible
 - [ ] fault-tolerant: data is protected against loss
 - [ ] distributed, scalable, low latency
@@ -22,6 +23,16 @@ We aim to design a distributed file system for the digital archival of financial
 Run PacioFS on local machine, mounting directory `mnt` to `vol`:
 ```
 python paciofs/paciofslocal.py --mountpoint mnt --volume vol
+```
+
+Example usage:
+```
+python paciofs/paciofslocal.py --mountpoint mnt --volume vol &
+sleep 15
+cd mnt
+echo hello > world.txt
+ls
+cat world.txt
 ```
 
 Run PacioFS as a client and server, mounting `mnt` on client to `vol` on server, connecting to server host `localhost` and port `8765`:
@@ -92,17 +103,18 @@ Uses:
 - Disk (local file system), instance disk
 
 upon event < fs, Init > do
-  servers = { } // map: pid -> host:port
-  tmp_log = { }  // map: obfuscated_msg -> msg
+  servers = { }  // set: pid
+  map = { }  // map: obfuscated_msg -> msg
   log = [ ]  // list: pid, epoch, txid, obfuscated_msg, msg
+  trigger < bc, Broadcast | "JOIN", pid >  // my pid
 
 upon event < fs, FSAPI-* | arg1, arg2, ... > do
   returnvalue = disk.*( arg1, arg2, ... )
   if * changes state do
     msg = ( *, arg1, arg2, ... )
-    obfuscated_msg = obfuscate( msg )
-    tmp_log.append( obfuscated_msg, msg )
-    trigger < bc, Broadcast | obfuscated_msg >
+    obfuscatedmsg = obfuscate( msg )
+    map[ obfuscatedmsg ] = msg
+    trigger < bc, Broadcast | obfuscatedmsg >
   trigger < fs, FSAPI-*-Return | returnvalue >
 
 upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid, host:port do
@@ -110,13 +122,13 @@ upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid, host:p
 
 upon event < bc, Deliver | pid, epoch, txid, msg > do
   if pid is my pid do  // if I broadcast message
-    unobfuscated_msg = tmp_log[ msg ]
-    log.append( pid, txid, msg, unobfuscated_msg )
-    tmp_log.remove( msg )
-  if pid is in servers do
-    repeat do
-      pid, host:port = random_choice( servers )
-      pid.
+    unobfuscatedmsg = map[ msg ]
+    log.append( pid, txid, msg, unobfuscatedmsg )
+  else if pid is in servers do  // if message from known server
+    repeat until success  // success if get unobfuscatedmsg from remote server
+      random_pid = random_choice( servers )  // randomly choose a server
+      unobfuscatedmsg = remote_get(pid, msg)  // get unobfuscated msg from remote server
+    log.append( pid, txid, msg, unobfuscatedmsg )
 
 // auditing API-1: verify integrity of file system
 upon event < fs, AuAPI-1 > do
@@ -126,7 +138,9 @@ Footnotes:
 - obfuscate: pseudo-anonymize data (salt hash data)
 - verify: check if disk is consistent with the tamper-proof
   records found in log
-- pid: signature public key; epoch: block number; txid: transaction id
+- pid: signature public key
+- epoch: block number
+- txid: transaction id
 ```
 
 ## Development
