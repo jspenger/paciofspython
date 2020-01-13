@@ -71,6 +71,7 @@ Run specific test:
 python -m unittest tests.integrationtests.test_tamperproofbroadcast -v
 python -m unittest tests.integrationtests.test_tamperproofbroadcast.TestTamperProofBroadcast.test_validity -v
 python -m unittest tests.integrationtests.test_paciofs -v
+python -m unittest tests.unittests.test_paciofs -v
 ```
 
 Run all benchmarks:
