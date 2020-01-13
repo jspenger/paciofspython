@@ -27,6 +27,7 @@ class TestPacioFS(unittest.TestCase):
         self.blockchains.append(b)
 
         keypairs = [b._create_funded_keypair() for _ in range(n_blockchains)]
+        extrakeypairs = [b._create_funded_keypair() for _ in range(n_blockchains)]
 
         for i in range(n_blockchains - 1):
             b2 = blockchain.Blockchain(chainname=b.getinfo()["nodeaddress"])
@@ -47,6 +48,8 @@ class TestPacioFS(unittest.TestCase):
             filesystem._register_southbound(bc)
             filesystem._start()
             self.filesystems.append(filesystem)
+
+        time.sleep(100)
 
     def tearDown(self):
         for fs in self.filesystems:
@@ -113,15 +116,15 @@ class TestPacioFS(unittest.TestCase):
                 self.assertTrue(dirname in list(fs.readdir("/", None)))
 
     def test_multi_volume(self):
-        keypair = self.blockchains[0]._create_funded_keypair()
-
-        b2 = blockchain.Blockchain(chainname=self.blockchains[0].getinfo()["nodeaddress"])
+        b2 = blockchain.Blockchain(
+            chainname=self.blockchains[0].getinfo()["nodeaddress"]
+        )
         b2._start()
 
         time.sleep(10)
 
         bc = tamperproofbroadcast.TamperProofBroadcast(
-            keypair[0], keypair[1], keypair[2]
+            extrakeypairs[0][0], extrakeypairs[0][1], extrakeypairs[0][2]
         )
         filesystem = paciofs.PacioFS("volume2")
         bc._register_southbound(b2)
@@ -130,7 +133,7 @@ class TestPacioFS(unittest.TestCase):
         filesystem._register_southbound(bc)
         filesystem._start()
 
-        time.sleep(10)
+        time.sleep(100)
 
         filename = "vol2.txt"
         payload = "vol2".encode()

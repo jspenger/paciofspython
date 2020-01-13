@@ -7,7 +7,9 @@ We aim to design a distributed file system for the digital archival of financial
 - [x] tamper-proof: any participant can detect unauthorized changes to the file system
 - [x] multi-user: multiple users can concurrently use the system
 - [x] multi-volume: supports multiple volumes
-- [ ] permissioned access / group membership: dynamic groups and permissions
+- [x] permissioned access / group membership: dynamic groups (join, leave)
+      and permissioned (voteaccept, votekick)
+- [ ] test, test, test ...
 - [ ] complete version history: the entire file-history is accessible
 - [ ] fault-tolerant: data is protected against loss
 - [ ] distributed, scalable, low latency
@@ -103,12 +105,12 @@ Uses:
 - Reliable FIFO-Order Tamper-Proof Broadcast, instance bc
 - Disk (local file system), instance disk
 
-upon event < fs, Init | pid, volume > do
-  this.pid, this.volume = pid, volume
-  servers = { }  // set: pid
+upon event < fs, Init | volume > do
+  this.volume = volume
+  servers = { }  // set of permissioned servers: pid
   map = { }  // map: obfuscated_msg -> msg
   log = [ ]  // list: pid, epoch, txid, obfuscated_msg, msg
-  trigger < bc, Broadcast | "JOIN", this.pid, this.volume >
+  trigger < bc, Broadcast | "JOIN", this.volume >
 
 upon event < fs, FSAPI-* | arg1, arg2, ... > do
   returnvalue = disk.*( arg1, arg2, ... )
@@ -119,9 +121,24 @@ upon event < fs, FSAPI-* | arg1, arg2, ... > do
     trigger < bc, Broadcast | obfuscated_msg >
   trigger < fs, FSAPI-*-Return | returnvalue >
 
-upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid, volume do
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "JOIN", volume do
   if volume is this.volume do
-    servers = servers \/ { pid }
+    if accept( join_pid ) do
+      trigger < bc, Broadcast | "VOTEACCEPT", pid, volume >
+
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "LEAVE", volume do
+  if volume is this.volume do
+    trigger < bc, Broadcast | "VOTEKICK", pid, volume >
+
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "VOTEACCEPT", vote_pid, volume do
+  if volume is this.volume do
+    if pid in servers or servers is empty do
+      servers = servers \/ { vote_pid }  // add pid to accepted servers
+
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "VOTEKICK", vote_pid, volume do
+  if volume is this.volume do
+    if pid in servers do
+      servers = servers \ { vote_pid }  // remove pid from accepted servers
 
 upon event < bc, Deliver | pid, epoch, txid, msg > do
   if pid in servers and pid is this.pid do  // if I broadcast message
@@ -132,6 +149,8 @@ upon event < bc, Deliver | pid, epoch, txid, msg > do
     repeat until success  // success if get unobfuscated_msg from remote server
       random_pid = random_choice( servers )  // randomly choose a server
       unobfuscated_msg = remote_get(pid, msg)  // get unobfuscated msg from remote server
+      if random_pid not responsive or unobfuscated_msg is not obfuscate(msg) do
+        trigger < bc, Broadcast | "VOTEKICK", random_pid, this.volume >
     log.append( pid, txid, msg, unobfuscatedmsg )
 
 upon event < fs, AuAPI-1 > do  // auditing API-1: verify integrity of file system
@@ -144,6 +163,8 @@ Footnotes:
 - epoch: block number
 - txid: transaction id
 - 'this' syntax similar to C++, e.g. this.x retrieves the object instance variable x
+- accept: function that accepts (returning true) or rejects (returning false) a new pid
+- voteaccept, votekick: 1 vote from permissioned node is enough to accept or kick
 ```
 
 ## Development

@@ -28,6 +28,9 @@ class DictServer(module.Module):
     def add_server(self, pubkey, address):
         self.servers[pubkey] = address
 
+    def remove_server(self, pubkey, address):
+        del self.servers[pubkey]
+
     def get(self, key):
         return self.dict.get(key)
 

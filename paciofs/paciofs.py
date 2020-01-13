@@ -59,11 +59,35 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
         return _upon_fsapi
 
     def _upon_deliver(self, pid, txid, obfuscatedmsg):
-        if obfuscatedmsg[0] == "join" and obfuscatedmsg[2] == self.volume:
-            logger.debug(
+        if obfuscatedmsg[0] == "JOIN":
+            logger.info(
                 "upon deliver: pid=%s; txid=%s; msg=%s" % (pid, txid, obfuscatedmsg)
             )
-            self.dictserver.add_server(pid, obfuscatedmsg[1])
+            if obfuscatedmsg[2] == self.volume:
+                if self._accept(pid):
+                    message = ("VOTEACCEPT", pid, obfuscatedmsg[1], obfuscatedmsg[2])
+                    self.southbound.broadcast(message=message)
+        elif obfuscatedmsg[0] == "LEAVE":
+            logger.info(
+                "upon deliver: pid=%s; txid=%s; msg=%s" % (pid, txid, obfuscatedmsg)
+            )
+            if obfuscatedmsg[2] == self.volume:
+                message = ("VOTEKICK", pid, obfuscatedmsg[1], obfuscatedmsg[2])
+                self.southbound.broadcast(message=message)
+        elif obfuscatedmsg[0] == "VOTEACCEPT":
+            logger.info(
+                "upon deliver: pid=%s; txid=%s; msg=%s" % (pid, txid, obfuscatedmsg)
+            )
+            if obfuscatedmsg[3] == self.volume:
+                if pid in self.dictserver.servers or self.dictserver.servers == {}:
+                    self.dictserver.add_server(obfuscatedmsg[1], obfuscatedmsg[2])
+        elif obfuscatedmsg[0] == "VOTEKICK":
+            logger.info(
+                "upon deliver: pid=%s; txid=%s; msg=%s" % (pid, txid, obfuscatedmsg)
+            )
+            if obfuscatedmsg[3] == self.volume:
+                if pid in self.dictserver.servers:
+                    self.dictserver.remove_server(obfuscatedmsg[1], obfuscatedmsg[2])
         elif pid in self.dictserver.servers and pid == self.southbound.pubkeyhash:
             logger.debug(
                 "upon deliver: pid=%s; txid=%s; obfuscatedmsg=%s"
@@ -115,12 +139,17 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
 
     def _start(self):
         self.dictserver._start()
-        message = ("join", self.dictserver.get_address(), self.volume)
+        message = ("JOIN", self.dictserver.get_address(), self.volume)
         self.southbound.broadcast(message)
 
     def _stop(self):
+        message = ("LEAVE", self.dictserver.get_address(), self.volume)
+        self.southbound.broadcast(message)
         self.dictserver._stop()
         self.stop_event.set()
+
+    def _accept(self, pid):
+        return True
 
     def __init__(self, volume=None, fileservervolume=None):
         self.stop_event = threading.Event()
