@@ -20,6 +20,7 @@ class DictServer(module.Module):
         self.sock.listen(128)
         self.servers = {}
         self.dict = {}
+        self.lock = threading.Lock()
         self.stop_event = threading.Event()
 
     def get_address(self):
@@ -32,10 +33,12 @@ class DictServer(module.Module):
         del self.servers[pubkey]
 
     def get(self, key):
-        return self.dict.get(key)
+        with self.lock:
+            return self.dict.get(key)
 
     def put(self, key, value):
-        self.dict[key] = value
+        with self.lock:
+            self.dict[key] = value
 
     @retrying.retry(wait_random_min=10, wait_random_max=100, stop_max_delay=5000)
     def get_remote(self, key):
