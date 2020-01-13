@@ -9,7 +9,7 @@ We aim to design a distributed file system for the digital archival of financial
 - [x] multi-volume: supports multiple volumes
 - [x] permissioned access / group membership: dynamic groups (join, leave)
       and permissioned (voteaccept, votekick)
-- [ ] test, test, test ...
+- [ ] test, test, test ... clean, clean, clean ...
 - [ ] complete version history: the entire file-history is accessible
 - [ ] fault-tolerant: data is protected against loss
 - [ ] distributed, scalable, low latency
