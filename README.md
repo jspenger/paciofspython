@@ -6,7 +6,7 @@ We aim to design a distributed file system for the digital archival of financial
 ## Current Status and Roadmap:
 - [x] tamper-proof: any participant can detect unauthorized changes to the file system
 - [x] multi-user: multiple users can concurrently use the system
-- [ ] multi-volume: supports multiple volumes
+- [x] multi-volume: supports multiple volumes
 - [ ] permissioned access / group membership: dynamic groups and permissions
 - [ ] complete version history: the entire file-history is accessible
 - [ ] fault-tolerant: data is protected against loss
@@ -68,6 +68,7 @@ Run specific test:
 ```
 python -m unittest tests.integrationtests.test_tamperproofbroadcast -v
 python -m unittest tests.integrationtests.test_tamperproofbroadcast.TestTamperProofBroadcast.test_validity -v
+python -m unittest tests.integrationtests.test_paciofs -v
 ```
 
 Run all benchmarks:
@@ -102,11 +103,12 @@ Uses:
 - Reliable FIFO-Order Tamper-Proof Broadcast, instance bc
 - Disk (local file system), instance disk
 
-upon event < fs, Init > do
+upon event < fs, Init | pid, volume > do
+  this.pid, this.volume = pid, volume
   servers = { }  // set: pid
   map = { }  // map: obfuscated_msg -> msg
   log = [ ]  // list: pid, epoch, txid, obfuscated_msg, msg
-  trigger < bc, Broadcast | "JOIN", pid >  // my pid
+  trigger < bc, Broadcast | "JOIN", this.pid, this.volume >
 
 upon event < fs, FSAPI-* | arg1, arg2, ... > do
   returnvalue = disk.*( arg1, arg2, ... )
@@ -117,15 +119,16 @@ upon event < fs, FSAPI-* | arg1, arg2, ... > do
     trigger < bc, Broadcast | obfuscated_msg >
   trigger < fs, FSAPI-*-Return | returnvalue >
 
-upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid do
-  servers = servers \/ { pid }
+upon event < bc, Deliver | pid, epoch, txid, msg > and msg = "join", pid, volume do
+  if volume is this.volume do
+    servers = servers \/ { pid }
 
 upon event < bc, Deliver | pid, epoch, txid, msg > do
-  if pid is my pid do  // if I broadcast message
+  if pid in servers and pid is this.pid do  // if I broadcast message
     unobfuscated_msg = map[ msg ]
     log.append( pid, txid, msg, unobfuscated_msg )
 
-  else if pid is in servers do  // if message from known server
+  else if pid is in servers  // if message from other known server
     repeat until success  // success if get unobfuscated_msg from remote server
       random_pid = random_choice( servers )  // randomly choose a server
       unobfuscated_msg = remote_get(pid, msg)  // get unobfuscated msg from remote server
@@ -136,11 +139,11 @@ upon event < fs, AuAPI-1 > do  // auditing API-1: verify integrity of file syste
 
 Footnotes:
 - obfuscate: pseudo-anonymize data (salt hash data)
-- verify: check if disk is consistent with the tamper-proof
-  records found in log
+- verify: check if disk is consistent with the tamper-proof records found in log
 - pid: signature public key
 - epoch: block number
 - txid: transaction id
+- 'this' syntax similar to C++, e.g. this.x retrieves the object instance variable x
 ```
 
 ## Development

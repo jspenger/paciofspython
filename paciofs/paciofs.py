@@ -59,12 +59,12 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
         return _upon_fsapi
 
     def _upon_deliver(self, pid, txid, obfuscatedmsg):
-        if obfuscatedmsg[0] == "join":
+        if obfuscatedmsg[0] == "join" and obfuscatedmsg[2] == self.volume:
             logger.debug(
                 "upon deliver: pid=%s; txid=%s; msg=%s" % (pid, txid, obfuscatedmsg)
             )
             self.dictserver.add_server(pid, obfuscatedmsg[1])
-        elif pid == self.southbound.pubkeyhash:
+        elif pid in self.dictserver.servers and pid == self.southbound.pubkeyhash:
             logger.debug(
                 "upon deliver: pid=%s; txid=%s; obfuscatedmsg=%s"
                 % (pid, txid, obfuscatedmsg)
@@ -105,7 +105,7 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
                 fs.release(msg[1], fh)
             else:
                 getattr(fs, msg[0])(*msg[1:])
-        cmp = filecmp.dircmp(volume, self.volume)
+        cmp = filecmp.dircmp(volume, self.fileservervolume)
         if len(cmp.left_only) > 0 or len(cmp.right_only) > 0 or len(cmp.diff_files) > 0:
             shutil.rmtree(volume, ignore_errors=True)
             return False
@@ -115,27 +115,33 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
 
     def _start(self):
         self.dictserver._start()
-        message = ("join", self.dictserver.get_address())
+        message = ("join", self.dictserver.get_address(), self.volume)
         self.southbound.broadcast(message)
 
     def _stop(self):
         self.dictserver._stop()
         self.stop_event.set()
 
-    def __init__(self, volume=None):
+    def __init__(self, volume=None, fileservervolume=None):
         self.stop_event = threading.Event()
         self.dictserver = helper.DictServer()
         self.log = []
         self.volume = volume
-        if self.volume == None:
-            self.volume = tempfile.mkdtemp()
-            self._handle_exit(lambda: shutil.rmtree(self.volume, ignore_errors=True))
-        if not os.path.isdir(self.volume) and not os.path.isfile(self.volume):
-            os.mkdir(self.volume)
-        elif os.path.isfile(self.volume):
-            raise Exception("%s is not a valid path" % self.volume)
-        logger.info("creating blockchainfilesystem at volume=%s" % (self.volume))
-        self.filesystem = passthrough.Passthrough(self.volume)
+        if fileservervolume == None:
+            self.fileservervolume = tempfile.mkdtemp()
+            self._handle_exit(
+                lambda: shutil.rmtree(self.fileservervolume, ignore_errors=True)
+            )
+        if not os.path.isdir(self.fileservervolume) and not os.path.isfile(
+            self.fileservervolume
+        ):
+            os.mkdir(self.fileservervolume)
+        elif os.path.isfile(self.fileservervolume):
+            raise Exception("%s is not a valid path" % self.fileservervolume)
+        logger.info(
+            "creating blockchainfilesystem at volume=%s" % (self.fileservervolume)
+        )
+        self.filesystem = passthrough.Passthrough(self.fileservervolume)
         for name, method in inspect.getmembers(self.filesystem):
             if name[0] != "_" and method is not None:
                 setattr(self, name, self._decorator(method))

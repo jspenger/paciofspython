@@ -111,3 +111,47 @@ class TestPacioFS(unittest.TestCase):
                 self.assertEqual(payload, fs.read(filename, 1024, 0, fh))
                 fs.release(filename, fh)
                 self.assertTrue(dirname in list(fs.readdir("/", None)))
+
+    def test_multi_volume(self):
+        keypair = self.blockchains[0]._create_funded_keypair()
+
+        b2 = blockchain.Blockchain(chainname=self.blockchains[0].getinfo()["nodeaddress"])
+        b2._start()
+
+        time.sleep(10)
+
+        bc = tamperproofbroadcast.TamperProofBroadcast(
+            keypair[0], keypair[1], keypair[2]
+        )
+        filesystem = paciofs.PacioFS("volume2")
+        bc._register_southbound(b2)
+        bc._register_northbound(filesystem)
+        bc._start()
+        filesystem._register_southbound(bc)
+        filesystem._start()
+
+        time.sleep(10)
+
+        filename = "vol2.txt"
+        payload = "vol2".encode()
+        filesystem.create(filename, 0o777)
+        fh = filesystem.open(filename, os.O_WRONLY)
+        filesystem.write(filename, payload, 0, fh)
+        filesystem.release(filename, fh)
+
+        # wait for changes to propagate
+        time.sleep(60)
+
+        # assert file writte to this volume "volume2"
+        self.assertTrue(filename in list(filesystem.readdir("/", None)))
+        fh = filesystem.open(filename, os.O_RDONLY)
+        self.assertEqual(payload, filesystem.read(filename, 1024, 0, fh))
+        filesystem.release(filename, fh)
+
+        # assert file not writte to other volumes
+        for i, fs in enumerate(self.filesystems):
+            self.assertFalse(filename in list(fs.readdir("/", None)))
+
+        filesystem._stop()
+        bc._stop()
+        b2._stop()
