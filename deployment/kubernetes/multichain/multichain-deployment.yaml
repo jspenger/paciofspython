@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: multichain
+spec:
+  serviceName: multichain
+  replicas: 3
+  selector:
+    matchLabels:
+      app: multichain
+  template:
+    metadata:
+      labels:
+        app: multichain
+    spec:
+      containers:
+      - name: multichain
+        image: alpine
+        ports:
+        - containerPort: 7209
+        - containerPort: 7208
+        command: ["/bin/sh", "-c"]
+        args:
+        - echo setting up environment;
+          echo installing multichain;
+          wget --quiet https://www.multichain.com/download/multichain-2.0.5.tar.gz;
+          tar -xvzf multichain-2.0.5.tar.gz;
+          cd multichain-2.0.5;
+          mv multichaind multichain-cli multichain-util /usr/local/bin;
+          echo ;
+          echo connecting to existing multichain blockchain;
+          echo attempt to connect to seed multichain;
+          multichaind chain@$(getent hosts multichainseed | cut -d' ' -f1):7209 -rpcuser=user -rpcpassword=password -rpcport=7208 -network-port=7209 -rpcallowip=0.0.0.0/0.0.0.0;
+          echo attempt to connect to other multichain;
+          nslookup multichain-headless;
+          multichaind chain@$(getent hosts multichain-headless | cut -d' ' -f1):7209 -rpcuser=user -rpcpassword=password -rpcport=7208 -network-port=7209 -rpcallowip=0.0.0.0/0.0.0.0;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multichain
+spec:
+  selector:
+    app: multichain
+  ports:
+    - name: multichainpeer
+      port: 7209
+      targetPort: 7209
+    - name: multichainclient
+      port: 7208
+      targetPort: 7208
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multichain-headless
+spec:
+  selector:
+    app: multichain
+  clusterIP: None
+  ports:
+    - name: multichainpeer
+      port: 7209
+      targetPort: 7209
+    - name: multichainclient
+      port: 7208
+      targetPort: 7208

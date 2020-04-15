@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: multichainseed
+spec:
+  backoffLimit: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: multichainseed
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: multichainseed
+        image: alpine
+        ports:
+        - containerPort: 7209
+        - containerPort: 7208
+        command: ["/bin/sh", "-c"]
+        args:
+        - echo setting up environment;
+          echo installing multichain;
+          wget --quiet https://www.multichain.com/download/multichain-2.0.5.tar.gz;
+          tar -xvzf multichain-2.0.5.tar.gz;
+          cd multichain-2.0.5;
+          mv multichaind multichain-cli multichain-util /usr/local/bin;
+          echo creating a new blockchain;
+          multichain-util create chain -anyone-can-connect=true -anyone-can-send=true -anyone-can-receive=true -anyone-can-mine=true -target-block-time=10 -first-block-reward=1 -mining-turnover=1.0 -default-network-port=7209 -default-rpc-port=7208 -mine-empty-rounds=1000000000	-initial-block-reward=1000000000;
+          echo running a new blockchain for 10 minutes;
+          timeout 10m multichaind chain -rpcuser=user -rpcpassword=password -rpcport=7208 -network-port=7209 -rpcallowip=0.0.0.0/0.0.0.0;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multichainseed
+spec:
+  selector:
+    app: multichainseed
+  clusterIP: None
+  ports:
+    - name: multichainpeer
+      port: 7209
+      targetPort: 7209
+    - name: multichainclient
+      port: 7208
+      targetPort: 7208
