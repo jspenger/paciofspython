@@ -9,8 +9,7 @@
 ################################################################################
 trap "kill 0" EXIT
 cd `dirname $0`
-# exit when any command fails
-set -e
+set -e  # exit when any command fails
 
 ################################################################################
 # run test
