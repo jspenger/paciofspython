@@ -16,7 +16,7 @@ logging.disable(logging.CRITICAL)
 
 class TestBlockchain(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 10
+        n_blockchains = 3
         self.blockchains = []
 
         b = blockchain.Blockchain()

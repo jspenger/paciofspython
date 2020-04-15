@@ -19,7 +19,7 @@ logging.disable(logging.CRITICAL)
 
 class TestPacioFS(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 5
+        n_blockchains = 3
         self.blockchains = []
         self.broadcasts = []
         self.filesystems = []
