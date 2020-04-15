@@ -16,10 +16,19 @@ We aim to design a distributed file system for the digital archival of financial
 
 ## Installation
 - Multichain:
-   - Install multichain (https://www.multichain.com/)
-   - Add multichain to path: `export PATH=$PATH:/usr/local/multichain-2.0-release`
+   - (Linux) Install multichain (https://www.multichain.com/, https://www.multichain.com/download-community/):
+   ```
+   cd /tmp
+   wget https://www.multichain.com/download/multichain-2.0.6.tar.gz
+   tar -xvzf multichain-2.0.6.tar.gz
+   ```
+   Move to bin folder: `cd multichain-2.0-release && mv multichaind multichain-cli multichain-util multichaind-cold /usr/local/bin;`
+   - (macOS) Install multichain (https://github.com/paciofs/multichain/releases/tag/2.0-dev-20190915T142420)
+   Move to bin folder: `mv multichaind multichain-cli multichain-util multichaind-cold /usr/local/bin`
+   Or, add to path: `export PATH=$PATH:XXX/multichain-2.0-dev/`
+   If you get message: `dyld: Library not loaded`, try reinstalling openssl: `brew reinstall https://github.com/tebelorg/Tump/releases/download/v1.0.0/openssl.rb` or `brew reinstall openssl`
 - Python:
-   - Install the required python packages: `pip install -r requirements.txt`
+   - Install the required python packages: `pip3 install -r requirements.txt`
 
 ## Usage
 Run PacioFS on local machine, mounting directory `mnt` to `vol`:
