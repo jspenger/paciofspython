@@ -1,0 +1,8 @@
+services:
+  - docker
+
+install:
+  - docker build -t paciofspython deployment/docker/
+
+script:
+  - docker run --rm -it --privileged jonasspenger/paciofspython sh paciofspython/tests/benchmarks/test_fio.sh
