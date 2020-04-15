@@ -21,20 +21,20 @@ cd .testposix
 
 # get and install posix testing suite: pjdfstest
 git clone https://github.com/pjd/pjdfstest.git
-pushd pjdfstest/
+cd pjdfstest/
 autoreconf -ifs
 ./configure
 make pjdfstest
-popd
+cd ..
 
 echo paciofslocal
 mkdir vol1
 mkdir mnt1
 timeout 1h python3 ../../../paciofs/paciofslocal.py --mountpoint mnt1 --volume vol1 --logginglevel ERROR &
 sleep 15
-pushd mnt1
+cd mnt1
 prove -rv ../pjdfstest/tests/ | tee ../test.paciofslocal.log
-popd
+cd ..
 umount mnt1
 
 echo passthroughfs
@@ -42,15 +42,15 @@ mkdir vol2
 mkdir mnt2
 timeout 1h python3 ../../../paciofs/passthrough.py vol2 mnt2 &
 sleep 15
-pushd mnt2
+cd mnt2
 prove -rv ../pjdfstest/tests/ | tee ../test.passthrough.log
-popd
+cd ..
 umount mnt2
 
 echo localfs
 mkdir vol3
-pushd vol3
+cd vol3
 prove -rv ../pjdfstest/tests/ | tee ../test.localfs.log
-popd
+cd ..
 
 exit
