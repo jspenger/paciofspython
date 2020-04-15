@@ -30,6 +30,7 @@ docker run \
 ```
 docker run \
   --rm \
+  --privileged \
   -p=3489:3489 \
   -p=3490:3490 \
   jonasspenger/paciofspython;
