@@ -29,6 +29,7 @@ popd
 
 echo paciofslocal
 mkdir vol1
+mkdir mnt1
 timeout 1h python3 ../../../paciofs/paciofslocal.py --mountpoint mnt1 --volume vol1 --logginglevel ERROR &
 sleep 15
 pushd mnt1
@@ -38,6 +39,7 @@ umount mnt1
 
 echo passthroughfs
 mkdir vol2
+mkdir mnt2
 timeout 1h python3 ../../../paciofs/passthrough.py vol2 mnt2 &
 sleep 15
 pushd mnt2
