@@ -28,59 +28,65 @@ We aim to design a distributed file system for the digital archival of financial
    Or, add to path: `export PATH=$PATH:XXX/multichain-2.0-dev/`
    If you get message: `dyld: Library not loaded`, try reinstalling openssl: `brew reinstall https://github.com/tebelorg/Tump/releases/download/v1.0.0/openssl.rb` or `brew reinstall openssl`
 - Python:
-   - Install the required python packages: `pip3 install -r requirements.txt`
+   - Install the required python3 packages: `pip3 install -r requirements.txt`
 
 ## Usage
 Run PacioFS on local machine, mounting directory `mnt` to `vol`:
 ```
-python paciofs/paciofslocal.py --mountpoint mnt --volume vol
+python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol
 ```
 
 Example usage:
 ```
-python paciofs/paciofslocal.py --mountpoint mnt --volume vol &
+python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol &
 sleep 15
 cd mnt
 echo hello > world.txt
 ls
 cat world.txt
+cd ..
+umount mnt
 ```
 
 Run PacioFS as a client and server, mounting `mnt` on client to `vol` on server, connecting to server host `localhost` and port `8765`:
 ```
-python paciofs/paciofsserver.py --volume vol --host localhost --port 8765
-python paciofs/paciofsclient.py --mountpoint mnt --host localhost --port 8765
+python3 paciofs/paciofsserver.py --volume vol --host localhost --port 8765
+python3 paciofs/paciofsclient.py --mountpoint mnt --host localhost --port 8765
 ```
 
 Run PacioFS connecting to existing blockchain at address `chainname@host:port`, for example `chain@127.0.0.1:8765`:
 ```
-python paciofs/paciofslocal.py --chainname chain@127.0.0.1:8765
+python3 paciofs/paciofslocal.py --chainname chain@127.0.0.1:8765
 ```
 
 To show the help message, and for more information on settings, set `-h` as an argument.
 ```
-python paciofs/paciofslocal.py -h
-python paciofs/paciofsserver.py -h
-python paciofs/paciofsclient.py -h
+python3 paciofs/paciofslocal.py -h
+python3 paciofs/paciofsserver.py -h
+python3 paciofs/paciofsclient.py -h
 ```
 
 ## Tests and Benchmarks
 Run all unit tests:
 ```
-python -m unittest discover tests/unittests -v
+python3 -m unittest discover tests/unittests -v
 ```
 
 Run all integration tests:
 ```
-python -m unittest discover tests/integrationtests -v
+python3 -m unittest discover tests/integrationtests -v
 ```
 
 Run specific test:
 ```
-python -m unittest tests.integrationtests.test_tamperproofbroadcast -v
-python -m unittest tests.integrationtests.test_tamperproofbroadcast.TestTamperProofBroadcast.test_validity -v
-python -m unittest tests.integrationtests.test_paciofs -v
-python -m unittest tests.unittests.test_paciofs -v
+python3 -m unittest tests.integrationtests.test_blockchain -v
+python3 -m unittest tests.integrationtests.test_paciofs -v
+python3 -m unittest tests.integrationtests.test_paciofslocal -v
+python3 -m unittest tests.integrationtests.test_tamperproofbroadcast -v
+python3 -m unittest tests.unittests.test_blockchain -v
+python3 -m unittest tests.unittests.test_kvstore -v
+python3 -m unittest tests.unittests.test_paciofs -v
+
 ```
 
 Run all benchmarks:
@@ -88,11 +94,11 @@ Run all benchmarks:
 sh tests/benchmarks/test_fio.sh
 ```
 
-Currently not supported benchmarks:
+Benchmarks currently not supported by PacioFS:
 ```
+sh tests/benchmarks/test_posix.sh
 sh tests/benchmarks/test_bonnie.sh
 sh tests/benchmarks/test_iozone.sh
-sh tests/benchmarks/test_posix.sh
 ```
 
 ## PacioFS Design
