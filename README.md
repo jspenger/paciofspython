@@ -1,4 +1,7 @@
 # PacioFS Python
+
+[![Build Status](https://travis-ci.com/jonasspenger/paciofspython.svg?branch=master)](https://travis-ci.com/jonasspenger/paciofspython)
+
 PacioFS is a tamper-proof file system under development at the Zuse Institute Berlin (https://www.zib.de/projects/pacio) (PacioFS java / C++, https://github.com/paciofs/paciofs).
 
 We aim to design a distributed file system for the digital archival of financial documents, compliant to German regulations.
