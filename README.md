@@ -14,7 +14,50 @@ We aim to design a distributed file system for the digital archival of financial
 - [ ] fault-tolerant: data is protected against loss
 - [ ] distributed, scalable, low latency
 
-## Installation
+## Docker Installation
+The recommended way to install PacioFS is via Docker.
+To build the docker image, see [deployment/docker/README.md](deployment/docker/README.md).
+
+Alternatively, use a pre-built image from docker hub at jonasspenger/paciofspython.
+
+## Example
+Run the image locally, using privileged to enable mounting FUSE locally.
+```
+docker run \
+  --rm \
+  -it \
+  --privileged \
+  jonasspenger/paciofspython \
+  /bin/ash;
+```
+It is convenient to run the image locally and execute a benchmark:
+```
+docker run \
+  --rm \
+  -it \
+  --privileged \
+  jonasspenger/paciofspython \
+  sh paciofspython/tests/benchmarks/test_fio.sh;
+```
+Or, to run the unit tests and integration tests.
+```
+docker run \
+  --rm \
+  -it \
+  --privileged \
+  jonasspenger/paciofspython \
+  python3 -m unittest discover paciofspython/tests/unittests -v;
+```
+```
+docker run \
+  --rm \
+  -it \
+  --privileged \
+  jonasspenger/paciofspython \
+  python3 -m unittest discover paciofspython/tests/integrationtests -v;
+```
+
+## Local Installation
 - Multichain:
    - (Linux) Install multichain (https://www.multichain.com/, https://www.multichain.com/download-community/):
    ```
