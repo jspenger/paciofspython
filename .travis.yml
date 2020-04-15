@@ -1,3 +1,5 @@
+language: ruby
+
 services:
   - docker
 
@@ -5,4 +7,7 @@ install:
   - docker build -t paciofspython deployment/docker/
 
 script:
-  - docker run --rm -it --privileged jonasspenger/paciofspython sh paciofspython/tests/benchmarks/test_fio.sh
+  # local file system benchmark
+  - docker run --rm -it --privileged paciofspython sh paciofspython/tests/benchmarks/test_fio.sh
+  # run unit tests
+  - docker run --rm -it --privileged paciofspython python3 -m unittest discover paciofspython/tests/unittests -v
