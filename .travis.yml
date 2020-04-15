@@ -8,7 +8,9 @@ install:
 
 script:
   # run paciofslocal, paciofsclient, paciofsserver
-  - docker run --rm -it --privileged paciofspython `python3 paciofspython/paciofs/paciofslocal.py -h && python3 paciofspython/paciofs/paciofsclient.py -h && python3 paciofspython/paciofs/paciofsserver.py -h`
+  - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofslocal.py -h`
+  - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofsclient.py -h`
+  - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofsserver.py -h`
   # run local file system benchmark
   - docker run --rm -it --privileged paciofspython sh paciofspython/tests/benchmarks/test_fio.sh
   # run unit tests
