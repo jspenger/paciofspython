@@ -85,8 +85,12 @@ python -m unittest tests.unittests.test_paciofs -v
 
 Run all benchmarks:
 ```
-sh tests/benchmarks/test_bonnie.sh
 sh tests/benchmarks/test_fio.sh
+```
+
+Currently not supported benchmarks:
+```
+sh tests/benchmarks/test_bonnie.sh
 sh tests/benchmarks/test_iozone.sh
 sh tests/benchmarks/test_posix.sh
 ```
