@@ -1,6 +1,9 @@
 import sys
+import os
 
-sys.path.append("paciofs")
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "paciofs"))
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+
 
 import unittest.mock
 import threading
