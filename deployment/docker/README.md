@@ -3,7 +3,7 @@
 ## Build
 ```
 docker build \
-  -t paciofs \
+  -t paciofspython \
   .;
 ```
 
@@ -13,7 +13,7 @@ docker run \
   --rm \
   -p=3489:3489 \
   -p=3490:3490 \
-  paciofs;
+  paciofspython;
 ```
 
 ## Or, run and enter shell
@@ -22,7 +22,7 @@ docker run \
   -it \
   --rm \
   --privileged \
-  paciofs \
+  paciofspython \
   /bin/ash;
 ```
 
@@ -32,5 +32,5 @@ docker run \
   --rm \
   -p=3489:3489 \
   -p=3490:3490 \
-  jonasspenger/paciofs;
+  jonasspenger/paciofspython;
 ```
