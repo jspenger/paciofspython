@@ -12,7 +12,7 @@ To delete deployment (PacioFSServer + MultiChain) run:
 sh delete-deployment.sh
 ```
 
-To run a short benchmark on the deployment, run `run_benchmark.sh` or:
+To run a short benchmark on the deployment, run `run_benchmark.sh` or (you might need to reduce the number of replicas if running on a local Kubernetes cluster):
 ```
 # deploy multichain and paciofs
 sh deploy.sh
@@ -20,8 +20,8 @@ sh deploy.sh
 # deploy benchmark
 sh benchmark/benchmark-deployment.sh
 
-# wait 10 minutes
-sleep 600
+# wait 5 minutes
+sleep 300
 
 # print logs
 sh print-logs.sh | tee benchmark.log

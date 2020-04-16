@@ -45,7 +45,7 @@ RUN apk add fuse
 # install fio benchmark
 RUN apk add fio
 # pull latest version of app
-RUN echo version 0.3.3
+RUN echo version 0.3.5
 RUN git clone https://github.com/jonasspenger/paciofspython.git
 RUN python3 paciofspython/paciofs/paciofslocal.py -h
 RUN python3 paciofspython/paciofs/paciofslocal.py fotb -h
