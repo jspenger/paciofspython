@@ -156,6 +156,7 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
         self.dictserver = helper.DictServer()
         self.log = []
         self.volume = volume
+        self.fileservervolume = fileservervolume
         if fileservervolume == None:
             self.fileservervolume = tempfile.mkdtemp()
             self._handle_exit(
