@@ -17,6 +17,7 @@ docker run \
 ```
 
 ## Or, run and enter shell
+Privileged mode (at your own risk) is needed to enable use of FUSE in the docker container. This allows the container to have root capabilities on the host machine.
 ```
 docker run \
   -it \

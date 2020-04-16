@@ -4,27 +4,27 @@
 
 PacioFS is a tamper-proof file system under development at the Zuse Institute Berlin (https://www.zib.de/projects/pacio) (PacioFS java / C++, https://github.com/paciofs/paciofs).
 
-We aim to design a distributed file system for the digital archival of financial documents, compliant to German regulations.
+We aim to design a distributed file system for the digital archival of financial documents compliant to German regulations.
 
 ## Current Status and Roadmap:
+This repository is a prototype under development and should not be used in deployment.
 - [x] tamper-proof: any participant can detect unauthorized changes to the file system
 - [x] multi-user: multiple users can concurrently use the system
 - [x] multi-volume: supports multiple volumes
-- [x] permissioned access / group membership: dynamic groups (join, leave)
-      and permissioned (voteaccept, votekick)
+- [x] permissioned access / group membership: dynamic groups (join, leave) and permissioned (voteaccept, votekick)
 - [ ] complete version history: the entire file-history is accessible
-- [ ] test, test, test ... clean, clean, clean ...
 - [ ] fault-tolerant: data is protected against loss
-- [ ] distributed, scalable, low latency
+- [ ] distributed, scalable, low latency, high throughput, etc.
+- [ ] test and clean
 
 ## Docker Installation
-The recommended way to install PacioFS is via Docker.
+The recommended way to install PacioFS Python is via Docker.
 To build the docker image, see [deployment/docker/README.md](deployment/docker/README.md).
 
-Alternatively, use a pre-built image from docker hub at jonasspenger/paciofspython.
+Alternatively, use the pre-built image from docker hub at jonasspenger/paciofspython.
 
 ## Example
-Run the image locally, using privileged to enable mounting FUSE locally.
+Run the image locally, using privileged (at your own risk) to enable mounting FUSE locally. This allows the container to have root capabilities on the host machine.
 ```
 docker run \
   --rm \
@@ -59,6 +59,8 @@ docker run \
   jonasspenger/paciofspython \
   python3 -m unittest discover paciofspython/tests/integrationtests -v;
 ```
+For an example of the outputs please refer to the latest build at [https://travis-ci.com/jonasspenger/paciofspython](https://travis-ci.com/jonasspenger/paciofspython).
+
 
 ## Local Installation
 - Multichain:
@@ -68,8 +70,11 @@ docker run \
    wget https://www.multichain.com/download/multichain-2.0.6.tar.gz
    tar -xvzf multichain-2.0.6.tar.gz
    ```
+
    Move to bin folder: `cd multichain-2.0-release && mv multichaind multichain-cli multichain-util multichaind-cold /usr/local/bin;`
+
    - (macOS) Install multichain (https://github.com/paciofs/multichain/releases/tag/2.0-dev-20190915T142420)
+
    Move to bin folder: `mv multichaind multichain-cli multichain-util multichaind-cold /usr/local/bin`
    Or, add to path: `export PATH=$PATH:XXX/multichain-2.0-dev/`
    If you get message: `dyld: Library not loaded`, try reinstalling openssl: `brew reinstall https://github.com/tebelorg/Tump/releases/download/v1.0.0/openssl.rb` or `brew reinstall openssl`
@@ -84,7 +89,7 @@ python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol
 
 Example usage:
 ```
-python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol &
+timeout 1m python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol &
 sleep 15
 cd mnt
 echo hello > world.txt

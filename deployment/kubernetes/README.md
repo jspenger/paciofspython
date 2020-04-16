@@ -1,4 +1,6 @@
 # PacioFS Kubernetes Deployment
+The deployment deploys 3 MultiChain servers and 3 PacioFS servers.
+The benchmark deployment launches a job that starts a PacioFS client connecting to one of the PacioFS servers, and runs the fio benchmark.
 
 To deploy (PacioFSServer + MultiChain) run:
 ```
