@@ -10,6 +10,7 @@ import threading
 import unittest
 import logging
 import random
+import queue
 import time
 import os
 import paciofs
@@ -39,6 +40,7 @@ class MockBroadcast(module.Module):
         self.head = 0
         self.stop_event = threading.Event()
         self.pubkeyhash = random.randint(0, 2 ** 30)
+        self.queue = queue.Queue()
 
     def broadcast(self, message):
         self.southbound.append(message=(self.pubkeyhash, "txid", message))
@@ -50,10 +52,19 @@ class MockBroadcast(module.Module):
             if message is not None:
                 self.head = self.head + 1
                 try:
-                    self.northbound._upon_deliver(message[0], message[1], message[2])
+                    self.queue.put((message[0], message[1], message[2]))
                 except Exception as e:
                     # print(e)
                     pass
+
+    def deliver(self, blocking=False):
+        if blocking == False:
+            try:
+                return self.queue.get_nowait()
+            except:
+                raise Exception({"error": "nothing to deliver"})
+        else:
+            return self.queue.get()
 
     def _start(self):
         threading.Thread(target=self._timeout_deliver, daemon=True).start()
