@@ -20,7 +20,7 @@ logging.disable(logging.CRITICAL)
 
 class TestPacioFS(unittest.TestCase):
     def setUp(self):
-        n_processes = 2
+        self.n_processes = 2
         self.broadcasts = []
         self.filesystems = []
 
@@ -28,9 +28,9 @@ class TestPacioFS(unittest.TestCase):
         self.b._create()
         self.b._start()
         time.sleep(10)  # wait for boot up
-        keypairs = [self.b._create_funded_keypair() for _ in range(n_processes)]
+        self.keypairs = [self.b._create_funded_keypair() for _ in range(self.n_processes+1)]
 
-        for keypair, i in zip(keypairs, range(n_processes)):
+        for keypair, i in zip(self.keypairs, range(self.n_processes)):
             args = argparse.Namespace(
                 protocol="fotb",
                 fotb_privkey=keypair[0],
@@ -45,7 +45,7 @@ class TestPacioFS(unittest.TestCase):
             self.broadcasts.append(tpb)
         time.sleep(10)  # wait for boot up
 
-        for i in range(n_processes):
+        for i in range(self.n_processes):
             filesystem = paciofs.PacioFS()
             self.broadcasts[i]._register_northbound(filesystem)
             filesystem._register_southbound(self.broadcasts[i])
@@ -122,8 +122,7 @@ class TestPacioFS(unittest.TestCase):
                 self.assertTrue(dirname in list(fs.readdir("/", None)))
 
     def test_multi_volume(self):
-        keypair = self.b._create_funded_keypair()
-        time.sleep(10)
+        keypair = self.keypairs[self.n_processes]
 
         args = argparse.Namespace(
             protocol="fotb",
@@ -137,7 +136,7 @@ class TestPacioFS(unittest.TestCase):
         tpb._create()
         tpb._start()
 
-        time.sleep(5)
+        time.sleep(10)
 
         filesystem = paciofs.PacioFS(volume="volume2")
         tpb._register_northbound(filesystem)
@@ -155,7 +154,7 @@ class TestPacioFS(unittest.TestCase):
         filesystem.release(filename, fh)
 
         # wait for changes to propagate
-        time.sleep(120)
+        time.sleep(60)
 
         # assert file written to this volume "volume2"
         self.assertTrue(filename in list(filesystem.readdir("/", None)))
