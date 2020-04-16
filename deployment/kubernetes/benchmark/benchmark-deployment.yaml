@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: benchmark
+spec:
+  backoffLimit: 0
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: benchmark
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: benchmark
+        securityContext:
+          privileged: true
+        image: jonasspenger/paciofspython:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - echo setting up environment;
+          MOUNTPOINT=testmnt;
+          mkdir $MOUNTPOINT;
+          HOST=$(getent hosts paciofs-headless | cut -d' ' -f1);
+          PORT=3489;
+          LOGGINGLEVEL=INFO;
+          echo starting benchmark;
+          timeout 10m python3 paciofspython/paciofs/paciofsclient.py --mountpoint=$MOUNTPOINT --host=$HOST --port=$PORT --logginglevel=$LOGGINGLEVEL &
+          sleep 10;
+          cd $MOUNTPOINT;
+          fio --name=test --bs=1K --size=10M --readwrite=randrw;
+          cd ..;
+          echo benchmark finished;

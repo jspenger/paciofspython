@@ -27,8 +27,8 @@ spec:
           MCRPCUSER=user;
           MCRPCPASSWD=password;
           MCCHAINNAME=chain@$MCHOST:7209;
-          LOGGINGLEVEL=ERROR;
-          HOST=localhost;
+          LOGGINGLEVEL=INFO;
+          HOST=$(hostname -i);
           PORT=3489;
           FSVOLUME=vol;
           echo starting paciofsserver;
