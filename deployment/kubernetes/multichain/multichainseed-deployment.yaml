@@ -28,7 +28,7 @@ spec:
           echo creating a new blockchain;
           multichain-util create chain -anyone-can-connect=true -anyone-can-send=true -anyone-can-receive=true -anyone-can-mine=true -target-block-time=10 -first-block-reward=1 -mining-turnover=1.0 -default-network-port=7209 -default-rpc-port=7208 -mine-empty-rounds=1000000000	-initial-block-reward=1000000000;
           echo running a new blockchain for 10 minutes;
-          timeout 10m multichaind chain -rpcuser=user -rpcpassword=password -rpcport=7208 -network-port=7209 -rpcallowip=0.0.0.0/0.0.0.0;
+          multichaind chain -rpcuser=user -rpcpassword=password -rpcport=7208 -network-port=7209 -rpcallowip=0.0.0.0/0.0.0.0;
 ---
 apiVersion: v1
 kind: Service
