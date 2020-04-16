@@ -9,7 +9,7 @@ import unittest.mock
 import unittest
 import logging
 import time
-import blockchain
+import tpb.multichain as multichain
 
 logging.disable(logging.CRITICAL)
 
@@ -19,22 +19,24 @@ class TestBlockchain(unittest.TestCase):
         n_blockchains = 3
         self.blockchains = []
 
-        b = blockchain.Blockchain()
+        b = multichain.MultiChain(create=True)
         b._create()
         b._start()
         self.blockchains.append(b)
 
         for i in range(n_blockchains - 1):
-            b2 = blockchain.Blockchain(chainname=b.getinfo()["nodeaddress"])
+            b2 = multichain.MultiChain(chainname=b.getinfo()["nodeaddress"], create=True)
+            b2._create()
             b2._start()
             self.blockchains.append(b2)
 
     def tearDown(self):
         for b in self.blockchains:
             b._stop()
+            b._uncreate()
 
     def test_more_than_one_miner(self):
-        time.sleep(120)
+        time.sleep(60)
         for b in self.blockchains:
             bbh = b.getbestblockhash()
             ledger = []
