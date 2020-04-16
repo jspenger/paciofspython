@@ -16,9 +16,10 @@ logger = logging.getLogger("paciofsserver")
 class PacioFSServer(module.Module):
     def __init__(self, host="localhost", port=None):
         self.host = host
-        self.port = port
-        if self.port == None:
+        if port == None:
             self.port = port_for.select_random()
+        else:
+            self.port = int(port)
 
     def _start(self):
         self._handle_exit(sys.exit)
