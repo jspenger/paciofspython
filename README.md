@@ -132,11 +132,10 @@ python3 -m unittest discover tests/integrationtests -v
 
 Run specific test:
 ```
-python3 -m unittest tests.integrationtests.test_blockchain -v
+python3 -m unittest tests.integrationtests.test_multichain -v
 python3 -m unittest tests.integrationtests.test_paciofs -v
 python3 -m unittest tests.integrationtests.test_paciofslocal -v
-python3 -m unittest tests.integrationtests.test_tamperproofbroadcast -v
-python3 -m unittest tests.unittests.test_blockchain -v
+python3 -m unittest tests.unittests.test_multichain -v
 python3 -m unittest tests.unittests.test_kvstore -v
 python3 -m unittest tests.unittests.test_paciofs -v
 
