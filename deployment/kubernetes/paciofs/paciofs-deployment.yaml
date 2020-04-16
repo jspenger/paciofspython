@@ -27,12 +27,12 @@ spec:
           MCRPCUSER=user;
           MCRPCPASSWD=password;
           MCCHAINNAME=chain@$MCHOST:7209;
-          LOGGINGLEVEL=INFO;
+          LOGGINGLEVEL=DEBUG;
           HOST=$(hostname -i);
           PORT=3489;
           FSVOLUME=vol;
           echo starting paciofsserver;
-          python3 paciofspython/paciofs/paciofsserver.py --logginglevel=$LOGGINGLEVEL --paciofsserver-host=$HOST --paciofsserver-port=$PORT --paciofs-fileservervolume=$FSVOLUME --multichain-host=$MCHOST --multichain-port=$MCPORT --multichain-user=$MCRPCUSER --multichain-passwd=$MCRPCPASSWD --multichain-chainname=$MCCHAINNAME;
+          python3 paciofspython/paciofs/paciofsserver.py --logginglevel=$LOGGINGLEVEL --paciofsserver-host=$HOST --paciofsserver-port=$PORT --paciofs-fileservervolume=$FSVOLUME --paciofs-volume=$FSVOLUME fotb --multichain-host=$MCHOST --multichain-port=$MCPORT --multichain-user=$MCRPCUSER --multichain-passwd=$MCRPCPASSWD --multichain-chainname=$MCCHAINNAME;
 ---
 apiVersion: v1
 kind: Service

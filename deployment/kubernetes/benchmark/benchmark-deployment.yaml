@@ -23,7 +23,7 @@ spec:
           mkdir $MOUNTPOINT;
           HOST=$(getent hosts paciofs-headless | cut -d' ' -f1);
           PORT=3489;
-          LOGGINGLEVEL=INFO;
+          LOGGINGLEVEL=DEBUG;
           echo starting benchmark;
           timeout 10m python3 paciofspython/paciofs/paciofsclient.py --paciofsclient-mountpoint=$MOUNTPOINT --paciofsclient-host=$HOST --paciofsclient-port=$PORT --logginglevel=$LOGGINGLEVEL &
           sleep 10;

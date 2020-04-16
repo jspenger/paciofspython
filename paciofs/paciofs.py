@@ -137,10 +137,18 @@ class PacioFS(rpyc.Service, fuse.Operations, module.Module):
             shutil.rmtree(volume, ignore_errors=True)
             return True
 
+    def _timeout_deliver(self):
+        while not self.stop_event.is_set():
+            try:
+                self._upon_deliver(*self.southbound.deliver(blocking=True))
+            except Exception as e:
+                logger.error("error: %s" % e)
+
     def _start(self):
         self.dictserver._start()
         message = ("JOIN", self.dictserver.get_address(), self.volume)
         self.southbound.broadcast(message)
+        threading.Thread(target=self._timeout_deliver, daemon=True).start()
 
     def _stop(self):
         message = ("LEAVE", self.dictserver.get_address(), self.volume)
