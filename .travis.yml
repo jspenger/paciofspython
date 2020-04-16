@@ -13,6 +13,9 @@ install:
 script:
   # run paciofslocal, paciofsclient, paciofsserver
   - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofslocal.py -h
+  - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofslocal.py fotb -h
+  - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofslocal.py totb -h
+  - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofslocal.py htlltb -h
   - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofsclient.py -h
   - docker run --rm -it --privileged paciofspython python3 paciofspython/paciofs/paciofsserver.py -h
   # run local file system benchmark

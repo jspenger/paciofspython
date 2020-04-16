@@ -4,8 +4,7 @@ import logging
 import rpyc
 import sys
 import os
-import tamperproofbroadcast
-import blockchain
+import tpb.tamperproofbroadcast as tamperproofbroadcast
 import paciofs
 import module
 
@@ -42,25 +41,20 @@ if __name__ == "__main__":
             PacioFSServer._Parser(),
             paciofs.PacioFS._Parser(),
             tamperproofbroadcast.TamperProofBroadcast._Parser(),
-            blockchain.Blockchain._Parser(),
         ]
     )
     parser.add_argument("--logginglevel", default="INFO")
     args = parser.parse_args()
     logging.getLogger().setLevel(args.logginglevel)
 
-    b = blockchain.Blockchain._Init(args)
     bc = tamperproofbroadcast.TamperProofBroadcast._Init(args)
     pfs = paciofs.PacioFS._Init(args)
     pfss = PacioFSServer._Init(args)
 
-    bc._register_southbound(b)
     bc._register_northbound(pfs)
     pfs._register_southbound(bc)
     pfss._register_southbound(pfs)
 
-    b._create()
-    b._start()
     bc._create()
     bc._start()
     pfs._create()

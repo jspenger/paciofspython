@@ -25,7 +25,7 @@ spec:
           PORT=3489;
           LOGGINGLEVEL=INFO;
           echo starting benchmark;
-          timeout 10m python3 paciofspython/paciofs/paciofsclient.py --mountpoint=$MOUNTPOINT --host=$HOST --port=$PORT --logginglevel=$LOGGINGLEVEL &
+          timeout 10m python3 paciofspython/paciofs/paciofsclient.py --paciofsclient-mountpoint=$MOUNTPOINT --paciofsclient-host=$HOST --paciofsclient-port=$PORT --logginglevel=$LOGGINGLEVEL &
           sleep 10;
           cd $MOUNTPOINT;
           fio --name=test --bs=1K --size=10M --readwrite=randrw;

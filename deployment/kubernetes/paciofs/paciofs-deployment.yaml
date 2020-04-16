@@ -32,7 +32,7 @@ spec:
           PORT=3489;
           FSVOLUME=vol;
           echo starting paciofsserver;
-          python3 paciofspython/paciofs/paciofsserver.py --logginglevel=$LOGGINGLEVEL --host=$HOST --port=$PORT --fileservervolume=$FSVOLUME --rpchost=$MCHOST --rpcport=$MCPORT --rpcuser=$MCRPCUSER --rpcpasswd=$MCRPCPASSWD --chainname=$MCCHAINNAME;
+          python3 paciofspython/paciofs/paciofsserver.py --logginglevel=$LOGGINGLEVEL --paciofsserver-host=$HOST --paciofsserver-port=$PORT --paciofs-fileservervolume=$FSVOLUME --multichain-host=$MCHOST --multichain-port=$MCPORT --multichain-user=$MCRPCUSER --multichain-passwd=$MCRPCPASSWD --multichain-chainname=$MCCHAINNAME;
 ---
 apiVersion: v1
 kind: Service

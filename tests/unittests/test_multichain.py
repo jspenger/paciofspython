@@ -7,26 +7,31 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 import unittest
 import logging
-import blockchain
+import tpb.multichain as multichain
 
 logging.disable(logging.CRITICAL)
 
 
-class TestBlockchain(unittest.TestCase):
-    def test_blockchain(self):
-        b1 = blockchain.Blockchain()
+class TestMultiChain(unittest.TestCase):
+    def test_multichain(self):
+        b1 = multichain.MultiChain(create=True)
         b1._create()
         b1._start()
-        b2 = blockchain.Blockchain(chainname=b1.getinfo()["nodeaddress"])
+        b2 = multichain.MultiChain(chainname=b1.getinfo()["nodeaddress"], create=True)
+        b2._create()
         b2._start()
-        b3 = blockchain.Blockchain(
-            rpcuser=b1.rpcuser,
-            rpcpasswd=b1.rpcpasswd,
+        b3 = multichain.MultiChain(
+            user=b1.rpcuser,
+            passwd=b1.rpcpasswd,
             chainname=b1.chainname,
-            rpchost=b1.rpchost,
-            rpcport=b1.rpcport,
+            host=b1.rpchost,
+            port=b1.rpcport,
         )
+        b3._create()
+        b3._start()
         self.assertEqual(b1.getinfo()["description"], b2.getinfo()["description"])
         self.assertEqual(b1.getinfo()["description"], b3.getinfo()["description"])
         b1._stop()
         b2._stop()
+        b1._uncreate()
+        b2._uncreate()

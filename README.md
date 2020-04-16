@@ -82,14 +82,14 @@ For an example of the outputs please refer to the latest build at [https://travi
    - Install the required python3 packages: `pip3 install -r requirements.txt`
 
 ## Usage
-Run PacioFS on local machine, mounting directory `mnt` to `vol`:
+Run PacioFS on local machine, mounting directory `mnt` to `vol`, using FIFO-order tamper-proof broadcast protocol (and creating a local multichain instance):
 ```
-python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol
+python3 paciofs/paciofslocal.py --logginglevel=DEBUG --paciofslocal-mountpoint mnt --paciofs-volume vol --paciofs-fileservervolume vol fotb --multichain-create=True
 ```
 
 Example usage:
 ```
-timeout 1m python3 paciofs/paciofslocal.py --mountpoint mnt --volume vol &
+timeout 1m python3 paciofs/paciofslocal.py --logginglevel=DEBUG --paciofslocal-mountpoint mnt --paciofs-volume vol --paciofs-fileservervolume vol fotb --multichain-create=True &
 sleep 15
 cd mnt
 echo hello > world.txt
@@ -101,18 +101,22 @@ umount mnt
 
 Run PacioFS as a client and server, mounting `mnt` on client to `vol` on server, connecting to server host `localhost` and port `8765`:
 ```
-python3 paciofs/paciofsserver.py --volume vol --host localhost --port 8765
-python3 paciofs/paciofsclient.py --mountpoint mnt --host localhost --port 8765
+python3 paciofs/paciofsserver.py --logginglevel=DEBUG --paciofs-volume vol --paciofs-fileservervolume vol --paciofsserver-host localhost --paciofsserver-port 8765 fotb --multichain-create=True
+python3 paciofs/paciofsclient.py --logginglevel=DEBUG --paciofsclient-mountpoint mnt --paciofsclient-host localhost --paciofsclient-port 8765
 ```
 
 Run PacioFS connecting to existing blockchain at address `chainname@host:port`, for example `chain@127.0.0.1:8765`:
 ```
-python3 paciofs/paciofslocal.py --chainname chain@127.0.0.1:8765
+python3 paciofs/paciofslocal.py --logginglevel=DEBUG fotb --multichain-chainname chain@127.0.0.1:8765;
 ```
 
 To show the help message, and for more information on settings, set `-h` as an argument.
 ```
 python3 paciofs/paciofslocal.py -h
+python3 paciofs/paciofslocal.py fotb -h
+python3 paciofs/paciofslocal.py totb -h
+python3 paciofs/paciofslocal.py htlltb -h
+python3 paciofs/paciofslocal.py htlltbtest -h
 python3 paciofs/paciofsserver.py -h
 python3 paciofs/paciofsclient.py -h
 ```

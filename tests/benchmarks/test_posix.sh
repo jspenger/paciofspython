@@ -30,7 +30,7 @@ cd ..
 echo paciofslocal
 mkdir vol1
 mkdir mnt1
-timeout 1h python3 ../../../paciofs/paciofslocal.py --mountpoint mnt1 --volume vol1 --logginglevel ERROR &
+timeout 1h python3 ../../../paciofs/paciofslocal.py --logginglevel=ERROR --paciofslocal-mountpoint=mnt1 --paciofs-fileservervolume=vol1 --paciofs-volume=vol1 fotb --multichain-create=True &
 sleep 15
 cd mnt1
 prove -rv ../pjdfstest/tests/ | tee ../test.paciofslocal.log
