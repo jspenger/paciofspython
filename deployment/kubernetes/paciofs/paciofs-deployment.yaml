@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: paciofs
+spec:
+  serviceName: paciofs
+  replicas: 1
+  selector:
+    matchLabels:
+      app: paciofs
+  template:
+    metadata:
+      labels:
+        app: paciofs
+    spec:
+      containers:
+      - name: paciofs
+        image: jonasspenger/paciofspython:latest
+        ports:
+        - containerPort: 3489
+        - containerPort: 3490
+        command: ["/bin/sh", "-c"]
+        args:
+        - echo setting up environment;
+          MCHOST=$(getent hosts multichain-headless | cut -d' ' -f1);
+          MCPORT=7208;
+          MCRPCUSER=user;
+          MCRPCPASSWD=password;
+          MCCHAINNAME=chain@$MCHOST:7209;
+          LOGGINGLEVEL=ERROR;
+          HOST=localhost;
+          PORT=3489;
+          FSVOLUME=vol;
+          echo starting paciofsserver;
+          python3 paciofspython/paciofs/paciofsserver.py --logginglevel=$LOGGINGLEVEL --host=$HOST --port=$PORT --fileservervolume=$FSVOLUME --rpchost=$MCHOST --rpcport=$MCPORT --rpcuser=$MCRPCUSER --rpcpasswd=$MCRPCPASSWD --chainname=$MCCHAINNAME;
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paciofs
+spec:
+  selector:
+    app: paciofs
+  ports:
+    - name: paciofspeer
+      port: 3490
+      targetPort: 3490
+    - name: paciofsclient
+      port: 3489
+      targetPort: 3489
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paciofs-headless
+spec:
+  selector:
+    app: paciofs
+  clusterIP: None
+  ports:
+    - name: paciofspeer
+      port: 3490
+      targetPort: 3490
+    - name: paciofsclient
+      port: 3489
+      targetPort: 3489
