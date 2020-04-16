@@ -8,7 +8,6 @@ import os
 import tpb.multichain as multichain
 import tpb.protocols as protocols
 import tpb.module as module
-import tpb.etcd as etcd
 import time
 
 logging.config.fileConfig(os.path.join(os.path.dirname(__file__), "logging.conf"))
@@ -32,20 +31,6 @@ class TamperProofBroadcast(module.Module):
             description="uniform causal-order total-order reliable tamper-proof broadcast",
             parents=[protocols.TOTB._Parser(), multichain.MultiChain._Parser(),],
         )
-        htlltb = subparsers.add_parser(
-            "htlltb",
-            help="high throughput low latency uniform total-order (causal-order) reliable tamper-proof broadcast",
-            description="high throughput low latency uniform total-order (causal-order) reliable tamper-proof broadcast",
-            parents=[
-                protocols.HTLLTB._Parser(),
-                protocols.FOTB._Parser(),
-                multichain.MultiChain._Parser(),
-                etcd.ETCD._Parser(),
-            ],
-        )
-        htlltbtest = subparsers.add_parser(
-            "htlltbtest", parents=[protocols.HTLLTBTEST._Parser(), etcd.ETCD._Parser()],
-        )
         return parser
 
     @classmethod
@@ -63,22 +48,6 @@ class TamperProofBroadcast(module.Module):
             mc._register_northbound(totb)
             totb._register_southbound(mc)
             return totb
-        if protocol == "htlltb":
-            htlltb = protocols.HTLLTB._Init(args)
-            fotb = protocols.FOTB._Init(args)
-            mc = multichain.MultiChain._Init(args)
-            et = etcd.ETCD._Init(args)
-            mc._register_northbound(fotb)
-            fotb._register_southbound(mc)
-            fotb._register_northbound(htlltb)
-            htlltb._register_southbound(fotb, name="fotb")
-            htlltb._register_southbound(et, name="etcd")
-            return htlltb
-        if protocol == "htlltbtest":
-            htlltbtest = protocols.HTLLTBTEST._Init(args)
-            et = etcd.ETCD._Init(args)
-            htlltbtest._register_southbound(et, name="etcd")
-            return htlltbtest
 
 
 if __name__ == "__main__":

@@ -115,8 +115,6 @@ To show the help message, and for more information on settings, set `-h` as an a
 python3 paciofs/paciofslocal.py -h
 python3 paciofs/paciofslocal.py fotb -h
 python3 paciofs/paciofslocal.py totb -h
-python3 paciofs/paciofslocal.py htlltb -h
-python3 paciofs/paciofslocal.py htlltbtest -h
 python3 paciofs/paciofsserver.py -h
 python3 paciofs/paciofsclient.py -h
 ```
