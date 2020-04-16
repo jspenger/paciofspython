@@ -21,3 +21,5 @@ script:
   - docker run --rm -it --privileged paciofspython sh paciofspython/tests/benchmarks/test_fio.sh
   # run unit tests
   - docker run --rm -it --privileged paciofspython python3 -m unittest discover paciofspython/tests/unittests -v
+  # run integration tests
+  - docker run --rm -it --privileged paciofspython python3 -m unittest discover paciofspython/tests/integrationtests -v

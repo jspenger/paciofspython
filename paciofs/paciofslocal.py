@@ -42,6 +42,8 @@ class PacioFSLocal(module.Module):
         else:
             fuse.FUSE(self.southbound, self.mountpoint, nothreads=True, foreground=True)
 
+    def _stop(self):
+        fuse.fuse_exit()
 
 if __name__ == "__main__":
     import argparse

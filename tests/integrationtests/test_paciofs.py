@@ -7,11 +7,12 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 import unittest.mock
 import unittest
+import argparse
 import logging
 import time
 import os
-import tamperproofbroadcast
-import blockchain
+import tpb.tamperproofbroadcast as tamperproofbroadcast
+import tpb.multichain as multichain
 import paciofs
 
 logging.disable(logging.CRITICAL)
@@ -19,48 +20,50 @@ logging.disable(logging.CRITICAL)
 
 class TestPacioFS(unittest.TestCase):
     def setUp(self):
-        n_blockchains = 3
-        self.blockchains = []
+        n_processes = 2
         self.broadcasts = []
         self.filesystems = []
 
-        b = blockchain.Blockchain()
-        b._create()
-        b._start()
-        self.blockchains.append(b)
+        self.b = multichain.MultiChain(create=True)
+        self.b._create()
+        self.b._start()
+        time.sleep(10)  # wait for boot up
+        keypairs = [self.b._create_funded_keypair() for _ in range(n_processes)]
 
-        keypairs = [b._create_funded_keypair() for _ in range(n_blockchains)]
-        extrakeypairs = [b._create_funded_keypair() for _ in range(n_blockchains)]
-
-        for i in range(n_blockchains - 1):
-            b2 = blockchain.Blockchain(chainname=b.getinfo()["nodeaddress"])
-            b2._start()
-            self.blockchains.append(b2)
-
-        time.sleep(10)
-
-        for keypair, b in zip(keypairs, self.blockchains):
-            bc = tamperproofbroadcast.TamperProofBroadcast(
-                keypair[0], keypair[1], keypair[2]
+        for keypair, i in zip(keypairs, range(n_processes)):
+            args = argparse.Namespace(
+                protocol="fotb",
+                fotb_privkey=keypair[0],
+                fotb_pubkeyhash=keypair[1],
+                fotb_prevtxhash=keypair[2],
+                multichain_chainname=self.b.getinfo()["nodeaddress"],
+                multichain_create=True,
             )
+            tpb = tamperproofbroadcast.TamperProofBroadcast._Init(args)
+            tpb._create()
+            tpb._start()
+            self.broadcasts.append(tpb)
+        time.sleep(10)  # wait for boot up
+
+        for i in range(n_processes):
             filesystem = paciofs.PacioFS()
-            bc._register_southbound(b)
-            bc._register_northbound(filesystem)
-            bc._start()
-            self.broadcasts.append(bc)
-            filesystem._register_southbound(bc)
+            self.broadcasts[i]._register_northbound(filesystem)
+            filesystem._register_southbound(self.broadcasts[i])
+            filesystem._create()
             filesystem._start()
             self.filesystems.append(filesystem)
 
-        time.sleep(100)
+        time.sleep(20)
 
     def tearDown(self):
         for fs in self.filesystems:
             fs._stop()
+            fs._uncreate()
         for bc in self.broadcasts:
             bc._stop()
-        for b in self.blockchains:
-            b._stop()
+            fs._uncreate()
+        self.b._stop()
+        self.b._uncreate()
 
     def test_verify(self):
         for i, fs in enumerate(self.filesystems):
@@ -119,24 +122,30 @@ class TestPacioFS(unittest.TestCase):
                 self.assertTrue(dirname in list(fs.readdir("/", None)))
 
     def test_multi_volume(self):
-        b2 = blockchain.Blockchain(
-            chainname=self.blockchains[0].getinfo()["nodeaddress"]
-        )
-        b2._start()
-
+        keypair = self.b._create_funded_keypair()
         time.sleep(10)
 
-        bc = tamperproofbroadcast.TamperProofBroadcast(
-            extrakeypairs[0][0], extrakeypairs[0][1], extrakeypairs[0][2]
+        args = argparse.Namespace(
+            protocol="fotb",
+            fotb_privkey=keypair[0],
+            fotb_pubkeyhash=keypair[1],
+            fotb_prevtxhash=keypair[2],
+            multichain_chainname=self.b.getinfo()["nodeaddress"],
+            multichain_create=True,
         )
-        filesystem = paciofs.PacioFS("volume2")
-        bc._register_southbound(b2)
-        bc._register_northbound(filesystem)
-        bc._start()
-        filesystem._register_southbound(bc)
+        tpb = tamperproofbroadcast.TamperProofBroadcast._Init(args)
+        tpb._create()
+        tpb._start()
+
+        time.sleep(5)
+
+        filesystem = paciofs.PacioFS(volume="volume2")
+        tpb._register_northbound(filesystem)
+        filesystem._register_southbound(tpb)
+        filesystem._create()
         filesystem._start()
 
-        time.sleep(100)
+        time.sleep(20)
 
         filename = "vol2.txt"
         payload = "vol2".encode()
@@ -146,9 +155,9 @@ class TestPacioFS(unittest.TestCase):
         filesystem.release(filename, fh)
 
         # wait for changes to propagate
-        time.sleep(60)
+        time.sleep(120)
 
-        # assert file writte to this volume "volume2"
+        # assert file written to this volume "volume2"
         self.assertTrue(filename in list(filesystem.readdir("/", None)))
         fh = filesystem.open(filename, os.O_RDONLY)
         self.assertEqual(payload, filesystem.read(filename, 1024, 0, fh))
@@ -159,5 +168,6 @@ class TestPacioFS(unittest.TestCase):
             self.assertFalse(filename in list(fs.readdir("/", None)))
 
         filesystem._stop()
-        bc._stop()
-        b2._stop()
+        filesystem._uncreate()
+        tpb._stop()
+        tpb._uncreate()
