@@ -1,14 +1,27 @@
 # Final Report
+Jonas Spenger \
+Zuse Institute Berlin \
+Research Group: Distributed Data Management
+
+April, 2020
+
 
 ## Contents
 - Introduction
 - Implementation: PacioFS
 - Implementation: PacioFSPython
 - Discussion
-  - Bad choices:
-    - MultiChain. In hindsight, we would maybe consider MultiChain to have been the wrong choice of technology, and perhaps preferred working with the Bitcoin blockchain. This is for two reasons: The MultiCHain codebase is not as frequently used as the Bitcoin codebase, thus more likely contains bugs and is less documented.
-    - FUSE. FUSE requires root privileges, which requires that root privileges are necessary for deployment and testing. Furthermore, the overhead of mounting FUSE, and the involvement of significantly more processes. This is especially noticeable whilst testing, and if one of the tests does not shut down gracefully. Furthermore, we are uncertain if the Posix File system is a sutable abstraction for our purposes. As saving a large file is in fact not one, but potentially a large number of operations, this increases the burden, or the question, should every operation be stored tamper-proof? or can operations be grouped together in more logical blocks? Perhaps, it would have been easier, less complex, to define a object blob-storage (like google cloud storage), that stores larger files in a single operation. Thus, each store would only generate one entry in the ledger.
 - Conclusions
+
+## Introduction
+PacioFS is a tamper-proof, distributed file system.
+The project scope involves the research and development of algorithms and protocols for manipulation proof, scalable and fault tolerant storage of data on the basis of blockchain technology.
+
+**Project information:**
+- Name: Pacio
+- Funding: Bundesministerium für Wirtschaft und Energie
+- https://www.zib.de/projects/pacio
+- Employment: Research Assistant Oct 2019 - Apr 2020
 
 ## Implementation - PacioFS
 This is the original version of PacioFS.
@@ -32,7 +45,7 @@ The PacioFS Server accepts any incoming requests via RPC from the PacioFS Client
 These requests are executed on the file system abstraction, the returnvalue is returned to the PacioFS Client.
 The requests are also appended to the blockchain using the MultiChain abstraction.
 
-Installing PacioFS:
+**Installing PacioFS:**
 - Download paciofs: `git clone https://github.com/paciofs/paciofs.git`
 - Navige into directory: `cd paciofs`
 - Install all libraries (Linux / MacOs):
@@ -64,12 +77,12 @@ Installing PacioFS:
 - Deploy to Kubernetes: `kubectl apply -f ./paciofs-kubernetes/paciofs-minikube.yaml`
 - Run test script: `bash -x .travis/test.sh`, or start
 
-Run PacioFS test script:
+**Run PacioFS test script:**
 ```
 bash -x .travis/test.sh
 ```
 
-Or deploy to Kubernetes (local cluster in this example):
+**Or deploy to Kubernetes (local cluster in this example):**
 ```
 # deploy to kubernetes
 minikube start
@@ -82,7 +95,7 @@ mkdir /tmp/volume1
 ${DESTDIR}/usr/local/bin/mount.paciofs localhost:8080 /tmp/volume1 volume1 -d TRACE
 ```
 
-Pitfalls:
+**Pitfalls:**
 - Make sure to install all required packages and libraries before running Maven installation.
 - Root is necessary for FUSE. PacioFS Client can only run with root access.
 
