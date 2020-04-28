@@ -199,3 +199,26 @@ The deployment includes a benchmark deployment.
 - Make software fault-tolerant, scalable, and high-performance.
 - Test and clean the software.
 - Future work includes proof-of-storage and proof-of-integrity.
+
+
+## Discussion
+We would recommend using a different blockchain such as Bitcoin, instead of MultiChain.
+The reason for this is that the MultiChain codebase is less documented. The Bitcoin blockchain should be less prone to bugs, due to its larger adoption.
+
+We recommend the consideration of not using FUSE.
+FUSE requires root privileges, which requires that root privileges are necessary for deployment and testing.
+Furthermore, the overhead of mounting FUSE, and the involvement of significantly more processes.
+This is especially noticeable whilst testing, and can cause orphan processes as it proved to be difficult to shut down gracefully.
+We are uncertain if the Posix File System is a suitable abstraction for our purposes.
+This is because saving a large file causes a large number of FUSE operations.
+This, in turn, implies that either every operation must be written to the tamper-proof broadcast somehow, or that the operations are logically grouped together and saved to the tamper-proof broadcast.
+It is less complex to define an object blob-storage, or key-value storage, that stores larger files in a single operation.
+In this case, each store would generate only one entry in the ledger.
+
+We experienced the implementation of PacioFSPython to be smooth, and enjoyed the selection of programming languages and extensions (with the exception of FUSE).
+Python was suitable for quick prototyping.
+
+We found the abstraction of the blockchain through the tamper-proof broadcast abstraction useful.
+It allowed us to express the tamper-proof file system in a clear way.
+
+Future work should focus on making PacioFSPython stable, and we recommend further work on the tamper-proof broadcast abstraction.
