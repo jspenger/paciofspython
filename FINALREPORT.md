@@ -8,10 +8,9 @@ April, 2020
 
 ## Contents
 - Introduction
-- Implementation: PacioFS
-- Implementation: PacioFSPython
+- Implementation - PacioFS
+- Implementation - PacioFSPython
 - Discussion
-- Conclusions
 
 
 ## Introduction
