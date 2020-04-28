@@ -135,47 +135,21 @@ For local installation, see https://github.com/jonasspenger/paciofspython/.
 ### Running, Testing, and Deployment - PacioFSPython
 **Running PacioFSPython:**
 ```
-docker run \
-  --rm \
-  -it \
-  --privileged \
-  jonasspenger/paciofspython \
-  sh paciofspython/tests/benchmarks/paciofspython/paciofs/paciofslocal.py -h;
-
-docker run \
-  --rm \
-  -it \
-  --privileged \
-  jonasspenger/paciofspython \
-  sh paciofspython/tests/benchmarks/paciofspython/paciofs/paciofslocal.py fotb -h;
+docker run --rm -it --privileged jonasspenger/paciofspython python3 paciofspython/paciofs/paciofslocal.py -h;
+docker run --rm -it --privileged jonasspenger/paciofspython python3 paciofspython/paciofs/paciofslocal.py fotb -h;
+docker run --rm -it --privileged jonasspenger/paciofspython python3 paciofspython/paciofs/paciofslocal.py totb -h;
 ```
 
 **Run benchmark:**
 ```
-docker run \
-  --rm \
-  -it \
-  --privileged \
-  jonasspenger/paciofspython \
-  sh paciofspython/tests/benchmarks/test_fio.sh;
+docker run --rm -it --privileged jonasspenger/paciofspython sh paciofspython/tests/benchmarks/test_fio.sh;
 ```
 The fio benchmark results can be inspected at https://travis-ci.com/github/jonasspenger/paciofspython.
 
 **Run unit tests and integration tests:**
 ```
-docker run \
-  --rm \
-  -it \
-  --privileged \
-  jonasspenger/paciofspython \
-  python3 -m unittest discover paciofspython/tests/unittests -v;
-
-docker run \
-  --rm \
-  -it \
-  --privileged \
-  jonasspenger/paciofspython \
-  python3 -m unittest discover paciofspython/tests/integrationtests -v;
+docker run --rm -it --privileged jonasspenger/paciofspython python3 -m unittest discover paciofspython/tests/unittests -v;
+docker run --rm -it --privileged jonasspenger/paciofspython python3 -m unittest discover paciofspython/tests/integrationtests -v;
 ```
 For an example of the outputs please refer to the latest build at https://travis-ci.com/jonasspenger/paciofspython.
 
