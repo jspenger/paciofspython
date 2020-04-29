@@ -96,6 +96,7 @@ ${DESTDIR}/usr/local/bin/mount.paciofs localhost:8080 /tmp/volume1 volume1 -d TR
 ## Implementation - PacioFSPython
 PacioFSPython is an implementation of PacioFS in Python with FUSE.
 It encompasses: PacioFS, the source code of the prototype under development; a Kubernetes and Docker deployment; integration tests, unit tests, benchmarks; and continuous integration with Travis-CI.
+The source code implements a server (paciofsserver), a client (paciofsclient), and a local client that encompasses both (paciofslocal).
 The source code can be found at: https://github.com/jonasspenger/paciofspython/.
 
 This code base is no longer being maintained.
