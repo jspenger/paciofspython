@@ -1,8 +1,7 @@
 # Final Report
 Jonas Spenger \
 Zuse Institute Berlin \
-Research Group: Distributed Data Management
-
+Research Group: Distributed Data Management \
 April, 2020
 
 
