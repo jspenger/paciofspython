@@ -6,24 +6,23 @@ April, 2020
 
 
 ## Contents
-- Introduction
-- Implementation - PacioFS
-- Implementation - PacioFSPython
-- Discussion
+1. Introduction
+2. Implementation - PacioFS
+3. Implementation - PacioFSPython
+4. Discussion
 
 
-## Introduction
+## 1. Introduction
 PacioFS is a tamper-proof, distributed file system.
-The project scope involves the research and development of algorithms and protocols for manipulation proof, scalable and fault tolerant storage of data on the basis of blockchain technology.
+The project involves research and development of algorithms and protocols for manipulation proof, scalable and fault tolerant storage of data on the basis of blockchain technology.
 
 **Project information:**
 - Name: Pacio
 - Funding: Bundesministerium für Wirtschaft und Energie
 - https://www.zib.de/projects/pacio
-- Employment: Research Assistant Oct 2019 - Apr 2020
 
 
-## Implementation - PacioFS
+## 2. Implementation - PacioFS
 PacioFS is the original version of PacioFS.
 It is implemented in languages Java, C++, using extensions: grpc, FUSE, MultiChain, Akka.
 It provides a deployment to Kubernetes and Docker, and automatic build integration using Travis-CI.
@@ -31,10 +30,10 @@ The open source code can be found at https://github.com/paciofs/paciofs.
 
 This code base is no longer being maintained.
 The program in this current state is not usable for a replicated file system, as the data is not replicated to other servers.
-Furthermore, the current implementation does not order guarantee any order on the transactions appended to the blockchain.
-The program does, however, serve as a base for building a RPC file system service in Java and C++.
+Furthermore, the current implementation does not guarantee any order on the transactions appended to the blockchain.
+The program does, however, serve as a base for continued work on PacioFS.
 
-### Design - PacioFS
+### 2.1 Design - PacioFS
 The PacioFS Server implementation consists of:
 - a MultiChain abstraction
 - a file system abstraction
@@ -42,12 +41,12 @@ The PacioFS Server implementation consists of:
 
 PacioFS Server starts a process that runs the MultiChain abstraction.
 The MultiChain abstraction continually synchronizes with the MultiChain.
-It also manages the set of UTXOs (unspent transaction outputs), such that it never is empty, by splitting transactions into smaller pieces, if the set of UTXOs are too few.
+The abstraction manages the set of UTXOs (unspent transaction outputs), and splits UTXOs into smaller such that it does not run out of UTXOs.
 The PacioFS Server accepts any incoming requests via RPC from the PacioFS Client.
 These requests are executed on the file system abstraction, the returnvalue is returned to the PacioFS Client.
-The requests are also appended to the blockchain using the MultiChain abstraction.
+The requests are appended to the blockchain using the MultiChain abstraction.
 
-### Installation - PacioFS
+### 2.2 Installation - PacioFS
 - Download paciofs: `git clone https://github.com/paciofs/paciofs.git`
 - Navige into directory: `cd paciofs`
 - Install all libraries (Linux / MacOs):
@@ -58,7 +57,7 @@ The requests are also appended to the blockchain using the MultiChain abstractio
     - clang-format, cppcheck, gettext, libboost-all-dev, libfuse-dev.
   - MacOS (brew install):
     - osxfuse, java11, boost, clang-format, cppcheck, gettext.
-- Install with Maven
+- Install PacioFS with Maven
   ```
   mvn --non-recursive install
   mvn --file ./paciofs-client/third_party/pom.xml install
@@ -66,7 +65,7 @@ The requests are also appended to the blockchain using the MultiChain abstractio
   mvn --define destdir=${DESTDIR} clean install
   ```
 
-### Running, Testing, and Deployment - PacioFS
+### 2.3 Running, Testing, and Deployment - PacioFS
 **Run PacioFS:**
 See https://github.com/paciofs/paciofs.
 
@@ -88,15 +87,16 @@ mkdir /tmp/volume1
 ${DESTDIR}/usr/local/bin/mount.paciofs localhost:8080 /tmp/volume1 volume1 -d TRACE
 ```
 
-### Pitfalls - PacioFS
+### 2.4 Pitfalls - PacioFS
 - Make sure to install all required packages and libraries before running Maven installation.
 - Root is necessary for FUSE. PacioFS Client can only run with root access.
-- Software should not be used in real-world systems.
+- Software is not yet suitable  to be used in real-world systems.
 
-## Implementation - PacioFSPython
+
+## 3. Implementation - PacioFSPython
 PacioFSPython is an implementation of PacioFS in Python with FUSE.
 It encompasses: PacioFS, the source code of the prototype under development; a Kubernetes and Docker deployment; integration tests, unit tests, benchmarks; and continuous integration with Travis-CI.
-The source code implements a server (paciofsserver), a client (paciofsclient), and a local client that encompasses both (paciofslocal).
+The source code implements a server (paciofsserver), a client (paciofsclient), and a local client that implements both client and server (paciofslocal).
 The source code can be found at: https://github.com/jonasspenger/paciofspython/.
 
 This code base is no longer being maintained.
@@ -108,31 +108,32 @@ The current status of the project is:
 - [x] permissioned access / group membership: dynamic groups (join, leave) and permissioned (voteaccept, votekick)
 
 The project supports continuous integration with Travis-CI, any pushed code to the repository is tested.
-The tests include a benchmark run of running a PacioFS Server cluster and MultiChain cluster on Kubernetes, executing the fio benchmark (https://fio.readthedocs.io/).
+The tests include executing the fio benchmark (https://fio.readthedocs.io/) on a PacioFS instance in a docker container.
+There are also scripts to execute and deploy the fio benchmark on a PacioFS Server cluster and MultiChain cluster on Kubernetes.
 A number of unit tests and integration tests are also run.
-The integration tests include testing a multi-user setup, a multi-volume setup, a single-volume setup, and testing the verify functionality.
+The integration tests include testing a multi-user setup, a multi-volume setup, a single-volume setup, and testing the verification functionality.
 The latest commit is built into a docker container and published at https://hub.docker.com/r/jonasspenger/paciofspython.
 
-### Design - PacioFSPython
+### 3.1 Design - PacioFSPython
 The PacioFSPython Server implementation consists of:
 - a MultiChain abstraction
 - a Tamper-Proof Broadcast abstraction (abstraction of the MultiChain abstraction)
 - and the main module, which we refer to as PacioFSPython Server.
 
-Upon first starting the server, it connects (or creates) a MultiChain instance, and instantiates the tamper-proof broadcast abstraction thereof.
+When the server is started, it connects to (or creates) a MultiChain instance, and instantiates the tamper-proof broadcast abstraction.
 When a user first connects to the server and creates a new volume, the volume name and the servers PID are broadcast.
-The server keeps a map of all servers and the volumes they manage.
+The server keeps a map (key -> value) of all servers and the volumes they manage.
 When the user issues a file system request to the server, the server executes the request locally, and if the request changes the state of the file system, broadcasts the hash value of the requested command via the broadcast abstraction.
 When the broadcast abstraction delivers a command on one of the managed volumes, this command is re-executed on the local file system.
 Pseudocode of the implementation is available at https://github.com/jonasspenger/paciofspython/.
 
-### Installation - PacioFSPython
+### 3.2 Installation - PacioFSPython
 The recommended way to install PacioFS Python is via Docker.
-To build the docker image, see deployment/docker/README.md.
-Alternatively, use the pre-built image from docker hub at jonasspenger/paciofspython.
+To build the docker image, see https://github.com/jonasspenger/paciofspython/tree/master/deployment/docker.
+Alternatively, use the pre-built image from docker hub at https://hub.docker.com/r/jonasspenger/paciofspython.
 For local installation, see https://github.com/jonasspenger/paciofspython/.
 
-### Running, Testing, and Deployment - PacioFSPython
+### 3.3 Running, Testing, and Deployment - PacioFSPython
 **Running PacioFSPython:**
 ```
 docker run --rm -it --privileged jonasspenger/paciofspython python3 paciofspython/paciofs/paciofslocal.py -h;
@@ -159,14 +160,14 @@ It is as simple as running the `sh deploy.sh` command.
 This starts a MultiChain cluster and a PacioFSPython server cluster.
 The deployment includes a benchmark deployment.
 
-### Pitfalls:
+### 3.4 Pitfalls:
 - Root access is necessary for FUSE. That is why the `--privileged` flag is necessary for running Docker containers. This is a potential security issue for the client.
 - MultiChain. Bootstrapping a MultiChain cluster requires two steps. First, a seed node has to create a new MultiChain blockchain together with a new genesis block. After that, other MultiChain nodes can connect to this new Blockchain either via the seed node, or via other nodes that have connected. (An instance of the Bitcoin blockchain would not require this two-step process, as the genesis block can be decided before launching the blockchain.)
-- Implementation can cause orphan process running FUSE and multichaind (MultiChain daemon). The implementation does not shut down gracefully.
+- Implementation can cause orphan processes running FUSE and multichaind (MultiChain daemon). The implementation does not currently shut down gracefully.
 - Software is not stable under large workloads, and should not be used in real-world systems.
 - Integration tests do not fully cover the requirements specification as required by GoBD (Grund­sät­ze zur ord­nungs­mä­ßi­gen Füh­rung und Auf­be­wah­rung von Bü­chern, Auf­zeich­nun­gen und Un­ter­la­gen in elek­tro­ni­scher Form so­wie zum Da­ten­zu­griff).
 
-### Outstanding Tasks
+### 3.5 Outstanding Tasks
 - Complete merger with https://github.com/jonasspenger/tamperproofbroadcast.
 - Implement support for version history (the entire file-history is accessible).
 - Make software fault-tolerant, scalable, and high-performance.
@@ -174,24 +175,19 @@ The deployment includes a benchmark deployment.
 - Future work includes proof-of-storage and proof-of-integrity.
 
 
-## Discussion
+## 4. Discussion
 We would recommend using a different blockchain such as Bitcoin, instead of MultiChain.
 The reason for this is that the MultiChain codebase is less documented. The Bitcoin blockchain should be less prone to bugs, due to its larger adoption.
 
 We recommend the consideration of not using FUSE.
-FUSE requires root privileges, which requires that root privileges are necessary for deployment and testing.
-Furthermore, the overhead of mounting FUSE, and the involvement of significantly more processes.
-This is especially noticeable whilst testing, and can cause orphan processes as it proved to be difficult to shut down gracefully.
-We are uncertain if the Posix File System is a suitable abstraction for our purposes.
-This is because saving a large file causes a large number of FUSE operations.
-This, in turn, implies that either every operation must be written to the tamper-proof broadcast somehow, or that the operations are logically grouped together and saved to the tamper-proof broadcast.
-It is less complex to define an object blob-storage, or key-value storage, that stores larger files in a single operation.
-In this case, each store would generate only one entry in the ledger.
+FUSE requires root privileges for deployment and testing.
+The overhead of mounting FUSE makes testing considerably more difficult.
+Furthermore, we are uncertain if the Posix File System is a suitable abstraction for our purposes.
+This is because many FUSE operations may be generated for saving large files.
+This implies that many operations are written to the tamper-proof broadcast.
+It would cause fewer writes to the tamper-proof broadcast if we instead used a object blob storage or key-value storage.
+The implementation of a tamper-proof key-value storage would also be simpler than a FUSE compatible file system.
 
-We experienced the implementation of PacioFSPython to be smooth, and enjoyed the selection of programming languages and extensions (with the exception of FUSE).
-Python was suitable for quick prototyping.
+We found the abstraction of the blockchain through the tamper-proof broadcast abstraction to be useful, as it  allowed us to express the tamper-proof file system in a clear way.
 
-We found the abstraction of the blockchain through the tamper-proof broadcast abstraction useful.
-It allowed us to express the tamper-proof file system in a clear way.
-
-Future work should focus on making PacioFSPython stable, and we recommend further work on the tamper-proof broadcast abstraction.
+Future work should focus on making PacioFSPython stable, and we recommend continued work on the tamper-proof broadcast abstraction.
